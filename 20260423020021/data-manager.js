@@ -5,7 +5,7 @@
     'use strict';
 
     // Vercel 部署时定义空的 API URL（避免报错）
-    if (typeof CLOUD_API_URL === 'undefined') {
+    if (window.CLOUD_API_URL === undefined) {
         window.CLOUD_API_URL = null;
     }
 
@@ -1199,8 +1199,9 @@
         // 直接测试云端连接和写入
         async testCloudWrite(testData = { test: true, time: Date.now() }) {
             // Vercel 部署时跳过云端测试（使用 localStorage）
-            if (!CLOUD_API_URL) {
+            if (!window.CLOUD_API_URL) {
                 console.log('[WorksData] Vercel mode: using localStorage');
+                // 保存测试数据到 localStorage 验证可用
                 try {
                     localStorage.setItem('_test_connection', JSON.stringify(testData));
                     const read = localStorage.getItem('_test_connection');
@@ -1210,32 +1211,6 @@
                 } catch (e) {
                     return { success: false, error: e.message };
                 }
-            }
-            
-            console.log('[WorksData] Testing cloud write...');
-            try {
-                const response = await fetch(CLOUD_API_URL, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ action: 'set', key: '_test_connection', value: testData })
-                });
-                
-                const result = await response.json();
-                console.log('[WorksData] Test write result:', result);
-                
-                // 立即读取验证
-                const readResponse = await fetch(CLOUD_API_URL, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ action: 'get' })
-                });
-                const readResult = await readResponse.json();
-                console.log('[WorksData] Verification - test key exists:', readResult.data?._test_connection);
-                
-                return { success: result.success, verified: !!readResult.data?._test_connection };
-            } catch (e) {
-                console.error('[WorksData] Test write failed:', e);
-                return { success: false, error: e.message };
             }
         },
         
@@ -1250,15 +1225,15 @@
                 },
                 cloudAvailable: typeof CloudAPI !== 'undefined',
                 cloudReady: CloudAPI?.isReady?.() || false,
-                cloudEndpoint: CLOUD_API_URL
+                cloudEndpoint: window.CLOUD_API_URL
             };
             
             // 实时查询云端数据（不依赖缓存）- 仅在有云端API时
-            if (report.cloudAvailable && CLOUD_API_URL) {
+            if (report.cloudAvailable && window.CLOUD_API_URL) {
                 try {
                     // 强制刷新，从云端实时获取
                     console.log('[WorksData] Querying cloud directly...');
-                    const response = await fetch(CLOUD_API_URL, {
+                    const response = await fetch(window.CLOUD_API_URL, {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({ action: 'get' })
