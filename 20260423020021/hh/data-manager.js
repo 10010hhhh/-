@@ -1371,10 +1371,7 @@ window.WorksData = (function() {
         clearVisitLogs,
         exportVisitReport
     };
-
-    console.log('[WorksData] Initialized, version:', getCacheVersion());
 })();
-    // 如需跨标签页同步，请在外部页面使用 localStorage.setItem 手动触发
 
-    console.log('[WorksData] Initialized, version:', getCacheVersion());
-})();
+// 验证 WorksData 已正确初始化
+console.log('[WorksData] Loaded, check window.WorksData:', typeof window.WorksData);
