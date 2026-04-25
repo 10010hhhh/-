@@ -1371,7 +1371,10 @@ window.WorksData = (function() {
         generateVisitReport,
         clearVisitLogs,
         exportVisitReport
-    };
+    exportVisitReport  // <--- 只保留这一个，作为列表的最后一项
+}; // <--- 这里闭合 return 的大括号
 
-    console.log('[WorksData] Initialized, version:', getCacheVersion());
-})();
+// 2. 在这里打印日志
+console.log('[WorksData] Initialized, version:', getCacheVersion());
+
+})(); // 3. 闭合 function 并立即执行
