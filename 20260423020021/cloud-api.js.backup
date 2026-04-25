@@ -1,0 +1,213 @@
+/**
+ * CloudBase API 模块 - 与云端数据库同步
+ */
+
+// 云函数 HTTP 访问地址
+const CLOUD_API_URL = 'https://ai-native-d0gc0n8ngab6ad9a9-1424489190.ap-shanghai.app.tcloudbase.com/site-api';
+
+// 云端数据缓存
+let cloudData = null;
+let isInitialized = false;
+let initPromise = null;
+
+/**
+ * 初始化云端连接
+ */
+async function initCloud() {
+    if (isInitialized) return cloudData;
+    if (initPromise) return initPromise;
+    
+    initPromise = (async () => {
+        try {
+            console.log('[CloudAPI] Connecting to cloud...');
+            const response = await fetch(CLOUD_API_URL, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ action: 'get' })
+            });
+            
+            if (response.ok) {
+                const result = await response.json();
+                if (result.success) {
+                    cloudData = result.data;
+                    isInitialized = true;
+                    console.log('[CloudAPI] Cloud connected successfully');
+                    console.log('[CloudAPI] Data loaded:', Object.keys(cloudData));
+                } else {
+                    console.error('[CloudAPI] Cloud returned error:', result.error);
+                }
+            } else {
+                console.error('[CloudAPI] Cloud request failed:', response.status);
+            }
+        } catch (error) {
+            console.error('[CloudAPI] Cloud connection failed:', error.message);
+        }
+        return cloudData;
+    })();
+    
+    return initPromise;
+}
+
+/**
+ * 获取云端数据
+ */
+async function getCloudData() {
+    if (!isInitialized) {
+        await initCloud();
+    }
+    return cloudData;
+}
+
+/**
+ * 保存数据到云端（支持分批保存大数据）
+ */
+async function saveToCloud(key, value) {
+    // 先确保已初始化
+    if (!isInitialized) {
+        await initCloud();
+    }
+    
+    try {
+        const dataSize = JSON.stringify(value).length;
+        console.log('[CloudAPI] Saving to cloud:', key, 'Size:', dataSize, 'bytes');
+        
+        // 大数据分批保存
+        if (dataSize > 200000) { // 超过200KB使用分批保存
+            console.log('[CloudAPI] Large data detected, using batch save...');
+            return await batchSaveToCloud(key, value);
+        }
+        
+        const response = await fetch(CLOUD_API_URL, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ action: 'set', key, value })
+        });
+        
+        if (response.ok) {
+            const result = await response.json();
+            if (result.success) {
+                if (cloudData) {
+                    cloudData[key] = value;
+                }
+                console.log('[CloudAPI] Saved to cloud:', key);
+                return true;
+            } else {
+                console.error('[CloudAPI] Save failed:', result.error);
+            }
+        } else if (response.status === 413) {
+            // 请求体太大，尝试分批保存
+            console.warn('[CloudAPI] Payload too large, trying batch save...');
+            return await batchSaveToCloud(key, value);
+        } else {
+            console.error('[CloudAPI] Save request failed:', response.status);
+        }
+    } catch (error) {
+        console.error('[CloudAPI] Save error:', error.message);
+    }
+    return false;
+}
+
+/**
+ * 分批保存大数据到云端
+ */
+async function batchSaveToCloud(key, value) {
+    try {
+        const serialized = JSON.stringify(value);
+        const chunkSize = 100000; // 每块100KB
+        const chunks = [];
+        
+        for (let i = 0; i < serialized.length; i += chunkSize) {
+            chunks.push(serialized.slice(i, i + chunkSize));
+        }
+        
+        console.log('[CloudAPI] Split data into', chunks.length, 'chunks');
+        
+        // 批量保存
+        const response = await fetch(CLOUD_API_URL, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ 
+                action: 'setChunked', 
+                key, 
+                totalChunks: chunks.length,
+                chunkIndex: 0,
+                chunkData: chunks[0],
+                isLast: chunks.length === 1
+            })
+        });
+        
+        if (response.ok) {
+            const result = await response.json();
+            if (result.success) {
+                // 继续保存剩余的 chunks
+                for (let i = 1; i < chunks.length; i++) {
+                    const chunkResponse = await fetch(CLOUD_API_URL, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            action: 'appendChunk',
+                            key,
+                            chunkIndex: i,
+                            chunkData: chunks[i],
+                            isLast: i === chunks.length - 1
+                        })
+                    });
+                    if (!chunkResponse.ok) {
+                        console.error('[CloudAPI] Chunk', i, 'failed');
+                        return false;
+                    }
+                }
+                
+                // 更新本地缓存
+                if (cloudData) {
+                    cloudData[key] = value;
+                }
+                console.log('[CloudAPI] Batch save completed:', key);
+                return true;
+            }
+        }
+    } catch (error) {
+        console.error('[CloudAPI] Batch save error:', error.message);
+    }
+    return false;
+}
+
+/**
+ * 强制从云端重新拉取数据（绕过缓存）
+ */
+async function forceRefreshCloudData() {
+    try {
+        console.log('[CloudAPI] Force refreshing cloud data...');
+        const response = await fetch(CLOUD_API_URL, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ action: 'get' })
+        });
+        
+        if (response.ok) {
+            const result = await response.json();
+            if (result.success) {
+                cloudData = result.data;
+                isInitialized = true;
+                console.log('[CloudAPI] Cloud data refreshed:', Object.keys(cloudData || {}));
+                return cloudData;
+            } else {
+                console.error('[CloudAPI] Force refresh returned error:', result.error);
+            }
+        } else {
+            console.error('[CloudAPI] Force refresh request failed:', response.status);
+        }
+    } catch (error) {
+        console.error('[CloudAPI] Force refresh failed:', error.message);
+    }
+    return cloudData;
+}
+
+// 暴露全局方法
+window.CloudAPI = {
+    init: initCloud,
+    getData: getCloudData,
+    save: saveToCloud,
+    isReady: () => isInitialized,
+    forceRefresh: forceRefreshCloudData
+};

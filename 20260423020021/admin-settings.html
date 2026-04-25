@@ -1,0 +1,1206 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>设置 | 张三设计工作室</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="/hh/cloud-api.js?v=2026042307"></script>
+    <script src="/hh/data-manager.js?v=2026042307"></script>
+    <style>
+        :root {
+            --primary: #1a1a1a;
+            --secondary: #666666;
+            --accent: #c9a87c;
+            --background: #fafafa;
+            --surface: #ffffff;
+            --muted: #e8e8e8;
+            --error: #dc3545;
+            --success: #28a745;
+            --font-heading: 'Cormorant Garamond', serif;
+            --font-body: 'Inter', sans-serif;
+            --sidebar-width: 260px;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: var(--font-body);
+            background-color: var(--background);
+            color: var(--primary);
+            min-height: 100vh;
+        }
+
+        .sidebar {
+            position: fixed;
+            left: 0; top: 0;
+            width: var(--sidebar-width);
+            height: 100vh;
+            background: var(--surface);
+            border-right: 1px solid var(--muted);
+            display: flex;
+            flex-direction: column;
+            z-index: 100;
+        }
+
+        .sidebar-header { padding: 24px; border-bottom: 1px solid var(--muted); }
+        .sidebar-logo {
+            font-family: var(--font-heading);
+            font-size: 24px;
+            font-weight: 600;
+            color: var(--primary);
+            letter-spacing: 2px;
+            text-decoration: none;
+            display: block;
+        }
+        .sidebar-subtitle { font-size: 12px; color: var(--secondary); margin-top: 4px; }
+        .sidebar-nav { flex: 1; padding: 16px 0; overflow-y: auto; }
+        .nav-section { margin-bottom: 24px; }
+        .nav-section-title {
+            padding: 8px 24px;
+            font-size: 11px;
+            font-weight: 600;
+            color: var(--secondary);
+            letter-spacing: 1.5px;
+            text-transform: uppercase;
+        }
+        .nav-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 24px;
+            font-size: 14px;
+            color: var(--secondary);
+            text-decoration: none;
+            transition: all 0.2s ease;
+            border-left: 3px solid transparent;
+        }
+        .nav-item:hover { background: var(--background); color: var(--primary); }
+        .nav-item.active { background: rgba(201, 168, 124, 0.1); color: var(--accent); border-left-color: var(--accent); }
+        .nav-badge {
+            margin-left: auto;
+            padding: 2px 8px;
+            font-size: 11px;
+            font-weight: 600;
+            background: var(--error);
+            color: white;
+            border-radius: 10px;
+        }
+        .sidebar-footer { padding: 16px 24px; border-top: 1px solid var(--muted); }
+        .user-info { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; }
+        .user-avatar {
+            width: 40px; height: 40px;
+            background: var(--accent);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 600;
+        }
+        .user-name { font-size: 14px; font-weight: 500; }
+        .user-role { font-size: 12px; color: var(--secondary); }
+        .logout-btn {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            width: 100%;
+            padding: 10px 16px;
+            font-family: var(--font-body);
+            font-size: 14px;
+            background: none;
+            border: 1px solid var(--muted);
+            border-radius: 4px;
+            color: var(--secondary);
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        .logout-btn:hover { background: var(--error); border-color: var(--error); color: white; }
+
+        .main-content { margin-left: var(--sidebar-width); min-height: 100vh; }
+        .topbar {
+            position: sticky;
+            top: 0;
+            background: var(--surface);
+            border-bottom: 1px solid var(--muted);
+            padding: 16px 32px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            z-index: 50;
+        }
+        .topbar-title { font-size: 20px; font-weight: 600; }
+        .content { padding: 32px; max-width: 800px; }
+
+        .settings-section {
+            background: var(--surface);
+            border-radius: 8px;
+            border: 1px solid var(--muted);
+            margin-bottom: 24px;
+            overflow: hidden;
+        }
+
+        .settings-header {
+            padding: 20px 24px;
+            border-bottom: 1px solid var(--muted);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .settings-header i { color: var(--accent); }
+        .settings-title { font-size: 16px; font-weight: 600; }
+        .settings-desc { font-size: 13px; color: var(--secondary); margin-top: 2px; }
+
+        .settings-body { padding: 24px; }
+
+        .form-group { margin-bottom: 20px; }
+        .form-group:last-child { margin-bottom: 0; }
+        .form-label {
+            display: block;
+            font-size: 13px;
+            font-weight: 500;
+            color: var(--primary);
+            margin-bottom: 8px;
+        }
+        .form-hint { font-size: 12px; color: var(--secondary); margin-top: 4px; }
+        .form-input, .form-select, .form-textarea {
+            width: 100%;
+            padding: 12px 16px;
+            font-family: var(--font-body);
+            font-size: 14px;
+            background: var(--background);
+            border: 1px solid var(--muted);
+            border-radius: 4px;
+            outline: none;
+            transition: border-color 0.2s ease;
+        }
+        .form-input:focus, .form-select:focus, .form-textarea:focus { border-color: var(--accent); }
+        .form-textarea { resize: vertical; min-height: 100px; }
+        .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+
+        .avatar-upload {
+            display: flex;
+            align-items: center;
+            gap: 24px;
+        }
+        .avatar-preview {
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 3px solid var(--muted);
+        }
+        .avatar-placeholder {
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            background: var(--accent);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 36px;
+            font-weight: 600;
+        }
+        .avatar-actions { display: flex; flex-direction: column; gap: 8px; }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 20px;
+            font-family: var(--font-body);
+            font-size: 14px;
+            font-weight: 500;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            text-decoration: none;
+        }
+        .btn-primary { background: var(--primary); color: white; }
+        .btn-primary:hover { background: var(--accent); }
+        .btn-outline { background: none; border: 1px solid var(--muted); color: var(--secondary); }
+        .btn-outline:hover { border-color: var(--accent); color: var(--accent); }
+        .btn-danger { background: var(--error); color: white; }
+        .btn-danger:hover { background: #c82333; }
+
+        .password-section {
+            border-left: 3px solid var(--warning);
+        }
+
+        .save-bar {
+            position: fixed;
+            bottom: 0;
+            left: var(--sidebar-width);
+            right: 0;
+            padding: 16px 32px;
+            background: var(--surface);
+            border-top: 1px solid var(--muted);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            transform: translateY(100%);
+            transition: transform 0.3s ease;
+            z-index: 50;
+        }
+        .save-bar.show { transform: translateY(0); }
+        .save-bar-text { font-size: 14px; color: var(--secondary); }
+        .save-bar-actions { display: flex; gap: 12px; }
+
+        .toast {
+            position: fixed;
+            bottom: 100px; right: 24px;
+            padding: 16px 24px;
+            background: var(--primary);
+            color: white;
+            border-radius: 8px;
+            font-size: 14px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+            transform: translateY(100px);
+            opacity: 0;
+            transition: all 0.3s ease;
+            z-index: 1000;
+        }
+        .toast.show { transform: translateY(0); opacity: 1; }
+        .toast.success { background: var(--success); }
+        .toast.error { background: var(--error); }
+
+        .stats-summary {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 16px;
+            padding: 20px;
+            background: var(--background);
+            border-radius: 8px;
+        }
+        .stat-item { text-align: center; }
+        .stat-value { font-family: var(--font-heading); font-size: 28px; font-weight: 600; color: var(--primary); }
+        .stat-label { font-size: 12px; color: var(--secondary); margin-top: 4px; }
+
+        /* Category Manager */
+        .category-list { list-style: none; }
+        .category-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 16px;
+            background: var(--background);
+            border-radius: 6px;
+            margin-bottom: 8px;
+            transition: all 0.2s ease;
+        }
+        .category-item:hover { background: var(--muted); }
+        .category-color {
+            width: 24px; height: 24px;
+            border-radius: 4px;
+            flex-shrink: 0;
+        }
+        .category-name { flex: 1; font-weight: 500; }
+        .category-actions { display: flex; gap: 8px; }
+        .category-btn {
+            width: 32px; height: 32px;
+            display: flex; align-items: center; justify-content: center;
+            background: none;
+            border: 1px solid var(--muted);
+            border-radius: 4px;
+            cursor: pointer;
+            color: var(--secondary);
+            transition: all 0.2s ease;
+        }
+        .category-btn:hover { background: var(--accent); border-color: var(--accent); color: white; }
+        .category-btn.delete:hover { background: var(--error); border-color: var(--error); }
+        .add-category-form {
+            display: flex;
+            gap: 12px;
+            margin-top: 16px;
+            padding-top: 16px;
+            border-top: 1px dashed var(--muted);
+        }
+        .add-category-form input[type="text"] { flex: 1; }
+        .add-category-form input[type="color"] { width: 48px; height: 42px; padding: 2px; cursor: pointer; }
+
+        /* Style Settings */
+        .style-preview {
+            padding: 20px;
+            background: var(--background);
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+        .style-preview-label { font-size: 12px; color: var(--secondary); margin-bottom: 8px; }
+        .style-preview-text { font-size: 18px; }
+        .style-options { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; }
+        .style-option { display: flex; flex-direction: column; gap: 8px; }
+        .style-option label { font-size: 13px; font-weight: 500; }
+        .style-option select, .style-option input[type="number"], .style-option input[type="color"] {
+            padding: 10px 12px;
+            font-size: 14px;
+            background: var(--background);
+            border: 1px solid var(--muted);
+            border-radius: 4px;
+            outline: none;
+        }
+        .style-option select:focus, .style-option input:focus { border-color: var(--accent); }
+        .style-option input[type="color"] { padding: 4px; height: 42px; cursor: pointer; }
+        .color-input-wrapper { display: flex; gap: 8px; align-items: center; }
+        .color-hex-input { width: 100px; }
+
+        @media (max-width: 768px) {
+            .sidebar { transform: translateX(-100%); }
+            .sidebar.open { transform: translateX(0); }
+            .main-content { margin-left: 0; }
+            .form-row { grid-template-columns: 1fr; }
+            .content { padding: 16px; }
+            .save-bar { left: 0; }
+            .avatar-upload { flex-direction: column; align-items: flex-start; }
+        }
+    </style>
+</head>
+<body>
+    <aside class="sidebar">
+        <div class="sidebar-header">
+            <a href="index.html" class="sidebar-logo">张三</a>
+            <p class="sidebar-subtitle">设计工作室管理后台</p>
+        </div>
+        <nav class="sidebar-nav">
+            <div class="nav-section">
+                <div class="nav-section-title">概览</div>
+                <a href="admin-dashboard.html" class="nav-item">
+                    <i data-lucide="layout-dashboard"></i>
+                    <span>仪表盘</span>
+                </a>
+                <a href="admin-analytics.html" class="nav-item">
+                    <i data-lucide="bar-chart-2"></i>
+                    <span>访问分析</span>
+                </a>
+            </div>
+            <div class="nav-section">
+                <div class="nav-section-title">内容管理</div>
+                <a href="admin-works.html" class="nav-item">
+                    <i data-lucide="image"></i>
+                    <span>作品管理</span>
+                    <span class="nav-badge" id="worksBadge">0</span>
+                </a>
+                <a href="admin-contacts.html" class="nav-item">
+                    <i data-lucide="mail"></i>
+                    <span>联系数据</span>
+                    <span class="nav-badge" id="contactsBadge">0</span>
+                </a>
+                <a href="admin-resume.html" class="nav-item">
+                    <i data-lucide="file-text"></i>
+                    <span>个人简历</span>
+                    <span class="nav-badge" id="resumeAuditBadge">0</span>
+                </a>
+            </div>
+            <div class="nav-section">
+                <div class="nav-section-title">系统</div>
+                <a href="admin-settings.html" class="nav-item active">
+                    <i data-lucide="settings"></i>
+                    <span>设置</span>
+                </a>
+            </div>
+        </nav>
+        <div class="sidebar-footer">
+            <div class="user-info">
+                <div class="user-avatar" id="userAvatar">A</div>
+                <div>
+                    <div class="user-name" id="userName">Admin</div>
+                    <div class="user-role">管理员</div>
+                </div>
+            </div>
+            <button class="logout-btn" id="logoutBtn">
+                <i data-lucide="log-out" width="18" height="18"></i>
+                退出登录
+            </button>
+        </div>
+    </aside>
+
+    <main class="main-content">
+        <header class="topbar">
+            <h1 class="topbar-title">设置</h1>
+        </header>
+
+        <div class="content">
+            <!-- Profile Section -->
+            <div class="settings-section">
+                <div class="settings-header">
+                    <i data-lucide="user" width="24" height="24"></i>
+                    <div>
+                        <h2 class="settings-title">个人信息</h2>
+                        <p class="settings-desc">管理您的设计师个人信息</p>
+                    </div>
+                </div>
+                <div class="settings-body">
+                    <div class="form-group">
+                        <label class="form-label">头像预览</label>
+                        <div class="avatar-upload">
+                            <div class="avatar-placeholder" id="avatarPreview">张</div>
+                            <div class="avatar-actions">
+                                <button class="btn btn-outline" id="generateAvatarBtn">
+                                    <i data-lucide="refresh-cw" width="16" height="16"></i>
+                                    随机生成卡通头像
+                                </button>
+                                <p class="form-hint">使用 DiceBear API 自动生成卡通风格头像</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label">设计师姓名</label>
+                            <input type="text" class="form-input" id="designerName" value="张三" placeholder="输入姓名">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">职业头衔</label>
+                            <input type="text" class="form-input" id="designerTitle" value="品牌与视觉设计师" placeholder="如: 品牌设计师">
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">个人简介</label>
+                        <textarea class="form-textarea" id="designerBio" placeholder="简短介绍自己...">我是一名深耕设计领域八年的视觉设计师，曾服务于多家知名企业与新锐品牌。坚信好的设计不仅是美的呈现，更是有效沟通的桥梁。</textarea>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label">邮箱</label>
+                            <input type="email" class="form-input" id="designerEmail" value="hello@linmobai.design" placeholder="your@email.com">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">电话</label>
+                            <input type="tel" class="form-input" id="designerPhone" value="+86 138 1234 5678" placeholder="+86 ...">
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">地址</label>
+                        <input type="text" class="form-input" id="designerAddress" value="上海市静安区" placeholder="城市/地区">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Stats Section -->
+            <div class="settings-section">
+                <div class="settings-header">
+                    <i data-lucide="bar-chart-2" width="24" height="24"></i>
+                    <div>
+                        <h2 class="settings-title">数据统计</h2>
+                        <p class="settings-desc">当前网站数据概览</p>
+                    </div>
+                </div>
+                <div class="settings-body">
+                    <div class="stats-summary">
+                        <div class="stat-item">
+                            <div class="stat-value" id="statWorks">6</div>
+                            <div class="stat-label">作品数量</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-value" id="statContacts">0</div>
+                            <div class="stat-label">联系表单</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-value" id="statViews">1,234</div>
+                            <div class="stat-label">浏览量</div>
+                        </div>
+                    </div>
+                    <div class="form-group" style="margin-top: 20px;">
+                        <button class="btn btn-outline" id="exportDataBtn">
+                            <i data-lucide="download" width="16" height="16"></i>
+                            导出所有数据
+                        </button>
+                        <button class="btn btn-outline" id="clearDataBtn" style="margin-left: 12px; border-color: var(--error); color: var(--error);">
+                            <i data-lucide="trash-2" width="16" height="16"></i>
+                            清空所有数据
+                        </button>
+                    </div>
+                    
+                    <!-- 云同步诊断 -->
+                    <div class="form-group" style="margin-top: 20px; padding-top: 20px; border-top: 1px dashed var(--muted);">
+                        <h4 style="margin-bottom: 12px; font-size: 14px; font-weight: 500;">云端同步状态</h4>
+                        <div id="cloudSyncStatus" style="margin-bottom: 16px; padding: 12px; background: var(--background); border-radius: 6px; font-size: 13px; color: var(--secondary);">
+                            点击下方按钮检测云端同步状态...
+                        </div>
+                        <button class="btn btn-outline" id="diagnoseCloudBtn" style="border-color: var(--accent); color: var(--accent);">
+                            <i data-lucide="cloud" width="16" height="16"></i>
+                            诊断云端同步
+                        </button>
+                        <button class="btn btn-primary" id="syncToCloudBtn" style="margin-left: 12px;">
+                            <i data-lucide="upload-cloud" width="16" height="16"></i>
+                            强制同步到云端
+                        </button>
+                        <button class="btn btn-outline" id="testCloudBtn" style="margin-left: 12px; border-color: #f5576c; color: #f5576c;">
+                            <i data-lucide="zap" width="16" height="16"></i>
+                            测试云端连接
+                        </button>
+                        <div id="cloudRawData" style="margin-top: 12px; padding: 12px; background: var(--background); border-radius: 6px; font-size: 12px; color: var(--secondary); display: none;">
+                            <strong>云端原始数据:</strong>
+                            <pre id="cloudRawDataContent" style="margin-top: 8px; white-space: pre-wrap; word-break: break-all;"></pre>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Category Manager Section -->
+            <div class="settings-section">
+                <div class="settings-header">
+                    <i data-lucide="tag" width="24" height="24"></i>
+                    <div>
+                        <h2 class="settings-title">作品分类管理</h2>
+                        <p class="settings-desc">添加、编辑和删除作品分类</p>
+                    </div>
+                </div>
+                <div class="settings-body">
+                    <ul class="category-list" id="categoryList">
+                        <!-- 动态渲染 -->
+                    </ul>
+                    <div class="add-category-form">
+                        <input type="text" class="form-input" id="newCategoryName" placeholder="新分类名称">
+                        <input type="color" id="newCategoryColor" value="#c9a87c">
+                        <button class="btn btn-primary" id="addCategoryBtn">
+                            <i data-lucide="plus" width="16" height="16"></i>
+                            添加
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Style Settings Section -->
+            <div class="settings-section">
+                <div class="settings-header">
+                    <i data-lucide="palette" width="24" height="24"></i>
+                    <div>
+                        <h2 class="settings-title">作品标题样式</h2>
+                        <p class="settings-desc">自定义作品卡片标题的字体样式</p>
+                    </div>
+                </div>
+                <div class="settings-body">
+                    <div class="style-preview">
+                        <p class="style-preview-label">预览效果</p>
+                        <p class="style-preview-text" id="stylePreview">示例作品标题</p>
+                    </div>
+                    <div class="style-options">
+                        <div class="style-option">
+                            <label>字体类型</label>
+                            <select id="titleFontFamily">
+                                <option value="'Cormorant Garamond', serif">Cormorant Garamond (衬线)</option>
+                                <option value="'Inter', sans-serif">Inter (无衬线)</option>
+                                <option value="'Playfair Display', serif">Playfair Display (衬线)</option>
+                                <option value="'Roboto Slab', serif">Roboto Slab (衬线)</option>
+                                <option value="'Lato', sans-serif">Lato (无衬线)</option>
+                                <option value="Georgia, serif">Georgia</option>
+                                <option value="Arial, sans-serif">Arial</option>
+                                <option value="system-ui, sans-serif">系统默认</option>
+                            </select>
+                        </div>
+                        <div class="style-option">
+                            <label>字体大小</label>
+                            <input type="number" id="titleFontSize" min="12" max="48" value="22" step="1">
+                        </div>
+                        <div class="style-option">
+                            <label>字体粗细</label>
+                            <select id="titleFontWeight">
+                                <option value="400">正常 (400)</option>
+                                <option value="500">中等 (500)</option>
+                                <option value="600">半粗 (600)</option>
+                                <option value="700">粗体 (700)</option>
+                            </select>
+                        </div>
+                        <div class="style-option">
+                            <label>字体颜色</label>
+                            <div class="color-input-wrapper">
+                                <input type="color" id="titleColor" value="#1a1a1a">
+                                <input type="text" class="form-input color-hex-input" id="titleColorHex" value="#1a1a1a" placeholder="#000000">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="form-group" style="margin-top: 20px;">
+                        <button class="btn btn-primary" id="applyStyleBtn">
+                            <i data-lucide="check" width="16" height="16"></i>
+                            应用样式
+                        </button>
+                        <button class="btn btn-outline" id="resetStyleBtn" style="margin-left: 12px;">
+                            <i data-lucide="rotate-ccw" width="16" height="16"></i>
+                            恢复默认
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Account Section -->
+            <div class="settings-section password-section">
+                <div class="settings-header">
+                    <i data-lucide="lock" width="24" height="24"></i>
+                    <div>
+                        <h2 class="settings-title">账户安全</h2>
+                        <p class="settings-desc">修改管理员密码</p>
+                    </div>
+                </div>
+                <div class="settings-body">
+                    <div class="form-group">
+                        <label class="form-label">当前用户名</label>
+                        <input type="text" class="form-input" id="currentUsername" readonly>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label">新密码</label>
+                            <input type="password" class="form-input" id="newPassword" placeholder="输入新密码">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">确认密码</label>
+                            <input type="password" class="form-input" id="confirmPassword" placeholder="再次输入新密码">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <button class="btn btn-primary" id="updatePasswordBtn">
+                            <i data-lucide="key" width="16" height="16"></i>
+                            更新密码
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Save Bar -->
+    <div class="save-bar" id="saveBar">
+        <p class="save-bar-text">您有未保存的更改</p>
+        <div class="save-bar-actions">
+            <button class="btn btn-outline" id="discardChangesBtn">放弃更改</button>
+            <button class="btn btn-primary" id="saveChangesBtn">
+                <i data-lucide="save" width="16" height="16"></i>
+                保存更改
+            </button>
+        </div>
+    </div>
+
+    <div class="toast" id="toast"></div>
+
+    <script>
+        lucide.createIcons();
+
+        function checkAuth() {
+            const session = JSON.parse(localStorage.getItem('portfolio_session') || sessionStorage.getItem('portfolio_session') || 'null');
+            if (!session || !session.isLoggedIn) window.location.href = 'admin-login.html';
+            return session;
+        }
+
+        const session = checkAuth();
+        if (session) {
+            document.getElementById('userName').textContent = session.username;
+            document.getElementById('userAvatar').textContent = session.username.charAt(0).toUpperCase();
+            document.getElementById('currentUsername').value = session.username;
+        }
+
+        document.getElementById('logoutBtn').addEventListener('click', () => {
+            localStorage.removeItem('portfolio_session');
+            sessionStorage.removeItem('portfolio_session');
+            window.location.href = 'admin-login.html';
+        });
+
+        // 加载设置
+        function loadSettings() {
+            const settings = JSON.parse(localStorage.getItem('portfolio_settings') || '{}');
+            
+            document.getElementById('designerName').value = settings.name || '张三';
+            document.getElementById('designerTitle').value = settings.title || '品牌与视觉设计师';
+            document.getElementById('designerBio').value = settings.bio || '';
+            document.getElementById('designerEmail').value = settings.email || 'hello@example.com';
+            document.getElementById('designerPhone').value = settings.phone || '';
+            document.getElementById('designerAddress').value = settings.address || '';
+            
+            if (settings.avatarSeed) {
+                updateAvatarPreview(settings.avatarSeed);
+            }
+            
+            updateStats();
+        }
+
+        function updateStats() {
+            const works = JSON.parse(localStorage.getItem('portfolio_works') || '[]');
+            const contacts = JSON.parse(localStorage.getItem('portfolio_contacts') || '[]');
+            document.getElementById('worksBadge').textContent = works.length;
+            document.getElementById('contactsBadge').textContent = contacts.length;
+            document.getElementById('statWorks').textContent = works.length;
+            document.getElementById('statContacts').textContent = contacts.length;
+            
+            // 更新待审核简历数量
+            const pendingResumeChanges = WorksData.getPendingResumeChanges ? WorksData.getPendingResumeChanges() : [];
+            const resumeBadge = document.getElementById('resumeAuditBadge');
+            if (resumeBadge) {
+                resumeBadge.textContent = pendingResumeChanges.length;
+                resumeBadge.style.display = pendingResumeChanges.length > 0 ? 'inline-block' : 'none';
+            }
+        }
+
+        // 检测更改
+        let hasChanges = false;
+        const inputs = document.querySelectorAll('.settings-body input, .settings-body textarea');
+        inputs.forEach(input => {
+            input.addEventListener('input', () => {
+                if (!hasChanges) {
+                    hasChanges = true;
+                    document.getElementById('saveBar').classList.add('show');
+                }
+            });
+        });
+
+        async function saveSettings() {
+            const settings = {
+                name: document.getElementById('designerName').value.trim(),
+                title: document.getElementById('designerTitle').value.trim(),
+                bio: document.getElementById('designerBio').value.trim(),
+                email: document.getElementById('designerEmail').value.trim(),
+                phone: document.getElementById('designerPhone').value.trim(),
+                address: document.getElementById('designerAddress').value.trim(),
+                avatarSeed: currentAvatarSeed
+            };
+            
+            localStorage.setItem('portfolio_settings', JSON.stringify(settings));
+            
+            // 同步到云端
+            try {
+                if (typeof WorksData !== 'undefined' && WorksData.saveAbout) {
+                    await WorksData.saveAbout(settings);
+                    console.log('[Settings] Saved to cloud successfully');
+                }
+            } catch (e) {
+                console.error('[Settings] Cloud sync failed:', e);
+            }
+            
+            // 记录日志
+            const logs = JSON.parse(localStorage.getItem('portfolio_logs') || '[]');
+            logs.unshift({
+                type: 'settings',
+                message: '更新了个人设置',
+                time: new Date().toISOString(),
+                ip: '127.0.0.1'
+            });
+            localStorage.setItem('portfolio_logs', JSON.stringify(logs.slice(0, 100)));
+            
+            hasChanges = false;
+            document.getElementById('saveBar').classList.remove('show');
+            showToast('设置已保存', 'success');
+        }
+
+        function discardChanges() {
+            hasChanges = false;
+            document.getElementById('saveBar').classList.remove('show');
+            loadSettings();
+        }
+
+        document.getElementById('saveChangesBtn').addEventListener('click', saveSettings);
+        document.getElementById('discardChangesBtn').addEventListener('click', discardChanges);
+
+        // 头像生成
+        let currentAvatarSeed = 'ZhangSan';
+
+        function updateAvatarPreview(seed) {
+            currentAvatarSeed = seed;
+            const avatarEl = document.getElementById('avatarPreview');
+            avatarEl.innerHTML = `<img src="https://api.dicebear.com/7.x/avataaars/svg?seed=${seed}&backgroundColor=b6e3f4" class="avatar-preview" style="border: none;">`;
+        }
+
+        document.getElementById('generateAvatarBtn').addEventListener('click', () => {
+            const randomSeed = Math.random().toString(36).substring(7);
+            updateAvatarPreview(randomSeed);
+            hasChanges = true;
+            document.getElementById('saveBar').classList.add('show');
+        });
+
+        // 密码更新
+        document.getElementById('updatePasswordBtn').addEventListener('click', () => {
+            const newPass = document.getElementById('newPassword').value;
+            const confirmPass = document.getElementById('confirmPassword').value;
+            
+            if (!newPass || !confirmPass) {
+                showToast('请填写所有密码字段', 'error');
+                return;
+            }
+            
+            if (newPass.length < 6) {
+                showToast('密码长度至少6位', 'error');
+                return;
+            }
+            
+            if (newPass !== confirmPass) {
+                showToast('两次密码不一致', 'error');
+                return;
+            }
+            
+            const admins = JSON.parse(localStorage.getItem('portfolio_admins') || '[]');
+            const adminIndex = admins.findIndex(a => a.username === session.username);
+            if (adminIndex !== -1) {
+                admins[adminIndex].password = newPass;
+                localStorage.setItem('portfolio_admins', JSON.stringify(admins));
+                
+                const logs = JSON.parse(localStorage.getItem('portfolio_logs') || '[]');
+                logs.unshift({
+                    type: 'settings',
+                    message: '更新了管理员密码',
+                    time: new Date().toISOString(),
+                    ip: '127.0.0.1'
+                });
+                localStorage.setItem('portfolio_logs', JSON.stringify(logs.slice(0, 100)));
+                
+                document.getElementById('newPassword').value = '';
+                document.getElementById('confirmPassword').value = '';
+                showToast('密码已更新', 'success');
+            }
+        });
+
+        // 导出数据
+        document.getElementById('exportDataBtn').addEventListener('click', () => {
+            const data = {
+                settings: JSON.parse(localStorage.getItem('portfolio_settings') || '{}'),
+                works: JSON.parse(localStorage.getItem('portfolio_works') || '[]'),
+                contacts: JSON.parse(localStorage.getItem('portfolio_contacts') || '[]'),
+                exportedAt: new Date().toISOString()
+            };
+            
+            const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `portfolio-backup-${new Date().toISOString().split('T')[0]}.json`;
+            a.click();
+            URL.revokeObjectURL(url);
+            
+            showToast('数据已导出', 'success');
+        });
+
+        // 清空数据
+        document.getElementById('clearDataBtn').addEventListener('click', () => {
+            if (confirm('确定要清空所有数据吗？这将删除所有作品、联系记录和设置，此操作不可恢复！')) {
+                if (confirm('这是最后一次确认，是否继续？')) {
+                    localStorage.removeItem('portfolio_works');
+                    localStorage.removeItem('portfolio_contacts');
+                    localStorage.removeItem('portfolio_settings');
+                    updateStats();
+                    showToast('所有数据已清空', 'success');
+                }
+            }
+        });
+
+        function showToast(message, type = 'info') {
+            const toast = document.getElementById('toast');
+            toast.textContent = message;
+            toast.className = `toast ${type}`;
+            toast.classList.add('show');
+            setTimeout(() => toast.classList.remove('show'), 3000);
+        }
+
+        // 初始化
+        loadSettings();
+
+        // ============ 分类管理 ============
+        function loadCategories() {
+            const categories = WorksData.getCategories();
+            const list = document.getElementById('categoryList');
+
+            if (categories.length === 0) {
+                list.innerHTML = '<li class="category-item"><span style="color: var(--secondary);">暂无分类</span></li>';
+                return;
+            }
+
+            list.innerHTML = categories.map(cat => `
+                <li class="category-item" data-id="${cat.id}">
+                    <div class="category-color" style="background-color: ${cat.color};"></div>
+                    <span class="category-name">${cat.name}</span>
+                    <div class="category-actions">
+                        <button class="category-btn edit" onclick="editCategory(${cat.id}, '${cat.name}', '${cat.color}')" title="编辑">
+                            <i data-lucide="edit-2" width="16" height="16"></i>
+                        </button>
+                        <button class="category-btn delete" onclick="deleteCategory(${cat.id})" title="删除">
+                            <i data-lucide="trash-2" width="16" height="16"></i>
+                        </button>
+                    </div>
+                </li>
+            `).join('');
+
+            lucide.createIcons();
+        }
+
+        // 添加分类
+        document.getElementById('addCategoryBtn').addEventListener('click', () => {
+            const name = document.getElementById('newCategoryName').value.trim();
+            const color = document.getElementById('newCategoryColor').value;
+
+            if (!name) {
+                showToast('请输入分类名称', 'error');
+                return;
+            }
+
+            WorksData.addCategory({ name, color });
+            document.getElementById('newCategoryName').value = '';
+
+            // 记录日志
+            WorksData.addLog('settings', `添加分类: ${name}`);
+
+            loadCategories();
+            showToast('分类已添加', 'success');
+        });
+
+        // 编辑分类
+        function editCategory(id, currentName, currentColor) {
+            const newName = prompt('输入新的分类名称:', currentName);
+            if (newName && newName.trim() !== currentName) {
+                WorksData.updateCategory(id, { name: newName.trim() });
+                WorksData.addLog('settings', `编辑分类: ${currentName} -> ${newName.trim()}`);
+                loadCategories();
+                showToast('分类已更新', 'success');
+            }
+        }
+
+        // 删除分类
+        function deleteCategory(id) {
+            const categories = WorksData.getCategories();
+            const category = categories.find(c => c.id === id);
+            if (category && confirm(`确定要删除分类 "${category.name}" 吗？`)) {
+                WorksData.deleteCategory(id);
+                WorksData.addLog('settings', `删除分类: ${category.name}`);
+                loadCategories();
+                showToast('分类已删除', 'success');
+            }
+        }
+
+        // ============ 样式设置管理 ============
+        function loadStyleSettings() {
+            const settings = WorksData.getStyleSettings();
+            const titleStyle = settings.workTitle;
+
+            document.getElementById('titleFontFamily').value = titleStyle.fontFamily || "'Cormorant Garamond', serif";
+            document.getElementById('titleFontSize').value = parseInt(titleStyle.fontSize) || 22;
+            document.getElementById('titleFontWeight').value = titleStyle.fontWeight || '500';
+            document.getElementById('titleColor').value = titleStyle.color || '#1a1a1a';
+            document.getElementById('titleColorHex').value = titleStyle.color || '#1a1a1a';
+
+            updateStylePreview();
+        }
+
+        function updateStylePreview() {
+            const preview = document.getElementById('stylePreview');
+            const fontFamily = document.getElementById('titleFontFamily').value;
+            const fontSize = document.getElementById('titleFontSize').value + 'px';
+            const fontWeight = document.getElementById('titleFontWeight').value;
+            const color = document.getElementById('titleColor').value;
+
+            preview.style.fontFamily = fontFamily;
+            preview.style.fontSize = fontSize;
+            preview.style.fontWeight = fontWeight;
+            preview.style.color = color;
+        }
+
+        // 同步颜色输入
+        document.getElementById('titleColor').addEventListener('input', (e) => {
+            document.getElementById('titleColorHex').value = e.target.value;
+        });
+
+        document.getElementById('titleColorHex').addEventListener('input', (e) => {
+            const hex = e.target.value;
+            if (/^#[0-9A-Fa-f]{6}$/.test(hex)) {
+                document.getElementById('titleColor').value = hex;
+            }
+        });
+
+        // 实时预览
+        ['titleFontFamily', 'titleFontSize', 'titleFontWeight', 'titleColor'].forEach(id => {
+            document.getElementById(id).addEventListener('change', updateStylePreview);
+        });
+
+        // 应用样式
+        document.getElementById('applyStyleBtn').addEventListener('click', () => {
+            const style = {
+                fontFamily: document.getElementById('titleFontFamily').value,
+                fontSize: document.getElementById('titleFontSize').value + 'px',
+                fontWeight: document.getElementById('titleFontWeight').value,
+                color: document.getElementById('titleColor').value
+            };
+
+            WorksData.updateWorkTitleStyle(style);
+            WorksData.addLog('settings', '更新了作品标题样式');
+
+            showToast('样式已应用', 'success');
+        });
+
+        // 恢复默认样式
+        document.getElementById('resetStyleBtn').addEventListener('click', () => {
+            WorksData.saveStyleSettings({
+                workTitle: {
+                    fontFamily: "'Cormorant Garamond', serif",
+                    fontSize: '22px',
+                    fontWeight: '500',
+                    color: '#1a1a1a'
+                }
+            });
+            WorksData.addLog('settings', '恢复了默认样式');
+            loadStyleSettings();
+            showToast('已恢复默认样式', 'success');
+        });
+
+        // 初始化分类和样式
+        loadCategories();
+        loadStyleSettings();
+
+        // ========== 云端同步诊断 ==========
+        const cloudStatusEl = document.getElementById('cloudSyncStatus');
+        
+        // 诊断云端同步状态
+        document.getElementById('diagnoseCloudBtn').addEventListener('click', async () => {
+            cloudStatusEl.innerHTML = '<span style="color: var(--accent);">正在诊断云端同步状态...</span>';
+            
+            try {
+                const report = await WorksData.diagnoseCloudSync();
+                
+                let statusHTML = '<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">';
+                statusHTML += `<div><strong>本地数据:</strong></div><div></div>`;
+                statusHTML += `<div style="padding-left: 12px;">• 作品: ${report.localData.works} 条</div>`;
+                statusHTML += `<div style="padding-left: 12px;">• 简介: ${report.localData.about}</div>`;
+                statusHTML += `<div style="padding-left: 12px;">• Banner: ${report.localData.banners} 条</div>`;
+                statusHTML += `<div style="padding-left: 12px;">• 分类: ${report.localData.categories} 条</div>`;
+                
+                if (report.cloudAvailable) {
+                    statusHTML += `<div style="margin-top: 12px;"><strong>云端数据 (实时查询):</strong></div><div></div>`;
+                    statusHTML += `<div style="padding-left: 12px;">• 作品: ${report.cloudData?.works || 0} 条</div>`;
+                    statusHTML += `<div style="padding-left: 12px;">• 简介: ${report.cloudData?.about || 'missing'}</div>`;
+                    statusHTML += `<div style="padding-left: 12px;">• Banner: ${report.cloudData?.banners || 0} 条</div>`;
+                    statusHTML += `<div style="padding-left: 12px;">• 分类: ${report.cloudData?.categories || 0} 条</div>`;
+                    
+                    // 显示云端实际存储的键名
+                    if (report.cloudData?.rawKeys?.length > 0) {
+                        statusHTML += `<div style="margin-top: 8px; padding-left: 12px; font-size: 11px; color: var(--secondary);">存储的键: ${report.cloudData.rawKeys.join(', ')}</div>`;
+                    }
+                    
+                    // 判断同步状态
+                    const localTotal = report.localData.works + report.localData.banners + report.localData.categories;
+                    const cloudTotal = (report.cloudData?.works || 0) + (report.cloudData?.banners || 0) + (report.cloudData?.categories || 0);
+                    
+                    if (report.cloudError) {
+                        statusHTML += `<div style="margin-top: 12px; padding: 8px; background: rgba(220, 53, 69, 0.1); border-radius: 4px; color: var(--error);">⚠️ 云端查询错误: ${report.cloudError}</div>`;
+                    } else if (cloudTotal === 0 && report.cloudData?.rawKeys?.length === 0) {
+                        statusHTML += `<div style="margin-top: 12px; padding: 8px; background: rgba(220, 53, 69, 0.1); border-radius: 4px; color: var(--error);">⚠️ 云端数据为空！请点击"强制同步到云端"按钮。</div>`;
+                    } else if (cloudTotal === 0 && report.cloudData?.rawKeys?.length > 0) {
+                        statusHTML += `<div style="margin-top: 12px; padding: 8px; background: rgba(255, 193, 7, 0.1); border-radius: 4px; color: var(--warning);">⚠️ 云端有数据但键名不匹配。请使用"测试云端连接"排查问题。</div>`;
+                    } else if (localTotal > cloudTotal) {
+                        statusHTML += `<div style="margin-top: 12px; padding: 8px; background: rgba(255, 193, 7, 0.1); border-radius: 4px; color: var(--warning);">⚠️ 本地数据比云端多，建议同步。</div>`;
+                    } else if (localTotal === cloudTotal) {
+                        statusHTML += `<div style="margin-top: 12px; padding: 8px; background: rgba(40, 167, 69, 0.1); border-radius: 4px; color: var(--success);">✓ 云端和本地数据一致</div>`;
+                    }
+                    
+                    // 显示云端endpoint
+                    statusHTML += `<div style="margin-top: 8px; font-size: 10px; color: var(--muted);">云端地址: ${report.cloudEndpoint}</div>`;
+                } else {
+                    statusHTML += `<div style="margin-top: 12px; color: var(--error);">❌ CloudAPI 不可用 (cloud-api.js 未加载)</div>`;
+                }
+                
+                statusHTML += '</div>';
+                cloudStatusEl.innerHTML = statusHTML;
+                
+            } catch (e) {
+                cloudStatusEl.innerHTML = `<span style="color: var(--error);">诊断失败: ${e.message}</span>`;
+            }
+        });
+        
+        // 强制同步到云端
+        document.getElementById('syncToCloudBtn').addEventListener('click', async () => {
+            if (!confirm('确定要将当前本地数据强制同步到云端吗？这将覆盖云端现有数据。')) {
+                return;
+            }
+            
+            cloudStatusEl.innerHTML = '<span style="color: var(--accent);">正在同步数据到云端...</span>';
+            
+            try {
+                await WorksData.syncAllToCloud();
+                
+                // 重新诊断（实时查询云端）
+                const report = await WorksData.diagnoseCloudSync();
+                
+                // 显示云端原始数据
+                const rawDataEl = document.getElementById('cloudRawData');
+                const rawContentEl = document.getElementById('cloudRawDataContent');
+                if (report.cloudData?.rawKeys?.length > 0) {
+                    rawDataEl.style.display = 'block';
+                    rawContentEl.textContent = 'Keys: ' + report.cloudData.rawKeys.join(', ');
+                }
+                
+                cloudStatusEl.innerHTML = `<span style="color: var(--success);">✓ 同步完成！云端数据已更新。</span>
+                    <div style="margin-top: 8px; font-size: 12px; color: var(--secondary);">
+                        • 作品: ${report.cloudData?.works || 0} 条<br>
+                        • 简介: ${report.cloudData?.about ? '已同步' : '未同步'}<br>
+                        • Banner: ${report.cloudData?.banners || 0} 条<br>
+                        • 分类: ${report.cloudData?.categories || 0} 条
+                        ${report.cloudError ? `<br><span style="color: var(--error);">错误: ${report.cloudError}</span>` : ''}
+                    </div>`;
+                
+                showToast('数据已同步到云端', 'success');
+                
+            } catch (e) {
+                cloudStatusEl.innerHTML = `<span style="color: var(--error);">同步失败: ${e.message}</span>`;
+                showToast('同步失败: ' + e.message, 'error');
+            }
+        });
+        
+        // 测试云端连接
+        document.getElementById('testCloudBtn').addEventListener('click', async () => {
+            cloudStatusEl.innerHTML = '<span style="color: var(--accent);">正在测试云端连接...</span>';
+            
+            try {
+                const result = await WorksData.testCloudWrite();
+                
+                if (result.success) {
+                    if (result.verified) {
+                        cloudStatusEl.innerHTML = `<span style="color: var(--success);">✓ 云端连接正常！写入测试数据成功并已验证。</span>`;
+                        showToast('云端连接测试成功', 'success');
+                    } else {
+                        cloudStatusEl.innerHTML = `<span style="color: var(--warning);">⚠️ 云端响应成功，但数据写入验证失败。请检查云函数日志。</span>`;
+                        showToast('云端连接测试异常', 'warning');
+                    }
+                } else {
+                    cloudStatusEl.innerHTML = `<span style="color: var(--error);">✗ 云端连接失败: ${result.error || '未知错误'}</span>`;
+                    showToast('云端连接测试失败', 'error');
+                }
+            } catch (e) {
+                cloudStatusEl.innerHTML = `<span style="color: var(--error);">测试失败: ${e.message}</span>`;
+                showToast('云端连接测试失败: ' + e.message, 'error');
+            }
+        });
+
+        // ========== 用户访问追踪 ==========
+        (function() {
+            const currentPage = 'admin-settings.html';
+            const userId = session?.username || 'admin';
+
+            WorksData.startPageView(currentPage, userId);
+            WorksData.recordVisit(currentPage, userId);
+
+            let maxScroll = 0;
+            window.addEventListener('scroll', function() {
+                const scrollPercent = Math.round((window.scrollY / (document.body.scrollHeight - window.innerHeight)) * 100);
+                if (scrollPercent > maxScroll) {
+                    maxScroll = scrollPercent;
+                    WorksData.updateScrollDepth(maxScroll);
+                }
+            });
+
+            document.addEventListener('click', function() {
+                WorksData.incrementInteractions();
+            });
+
+            window.addEventListener('beforeunload', function() {
+                WorksData.endPageView();
+            });
+
+            document.addEventListener('visibilitychange', function() {
+                if (document.hidden) {
+                    WorksData.endPageView();
+                } else {
+                    WorksData.startPageView(currentPage, userId);
+                }
+            });
+        })();
+    </script>
+</body>
+</html>

@@ -1,0 +1,1226 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>个人简历管理 | 张三设计工作室</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="/hh/cloud-api.js?v=2026042304"></script>
+    <script src="/hh/data-manager.js?v=2026042304"></script>
+    <style>
+        :root {
+            --primary: #1a1a1a;
+            --secondary: #666666;
+            --accent: #c9a87c;
+            --background: #fafafa;
+            --surface: #ffffff;
+            --muted: #e8e8e8;
+            --error: #dc3545;
+            --success: #28a745;
+            --font-heading: 'Cormorant Garamond', serif;
+            --font-body: 'Inter', sans-serif;
+            --sidebar-width: 260px;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: var(--font-body);
+            background-color: var(--background);
+            color: var(--primary);
+            min-height: 100vh;
+        }
+
+        .sidebar {
+            position: fixed;
+            left: 0; top: 0;
+            width: var(--sidebar-width);
+            height: 100vh;
+            background: var(--surface);
+            border-right: 1px solid var(--muted);
+            display: flex;
+            flex-direction: column;
+            z-index: 100;
+        }
+
+        .sidebar-header { padding: 24px; border-bottom: 1px solid var(--muted); }
+        .sidebar-logo {
+            font-family: var(--font-heading);
+            font-size: 24px;
+            font-weight: 600;
+            color: var(--primary);
+            letter-spacing: 2px;
+            text-decoration: none;
+            display: block;
+        }
+        .sidebar-subtitle { font-size: 12px; color: var(--secondary); margin-top: 4px; }
+        .sidebar-nav { flex: 1; padding: 16px 0; overflow-y: auto; }
+        .nav-section { margin-bottom: 24px; }
+        .nav-section-title {
+            padding: 8px 24px;
+            font-size: 11px;
+            font-weight: 600;
+            color: var(--secondary);
+            letter-spacing: 1.5px;
+            text-transform: uppercase;
+        }
+        .nav-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 24px;
+            font-size: 14px;
+            color: var(--secondary);
+            text-decoration: none;
+            transition: all 0.2s ease;
+            border-left: 3px solid transparent;
+        }
+        .nav-item:hover { background: var(--background); color: var(--primary); }
+        .nav-item.active { background: rgba(201, 168, 124, 0.1); color: var(--accent); border-left-color: var(--accent); }
+        .sidebar-footer { padding: 16px 24px; border-top: 1px solid var(--muted); }
+        .user-info { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; }
+        .user-avatar {
+            width: 40px; height: 40px;
+            background: var(--accent);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 600;
+        }
+        .user-name { font-size: 14px; font-weight: 500; }
+        .user-role { font-size: 12px; color: var(--secondary); }
+        .logout-btn {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            width: 100%;
+            padding: 10px 16px;
+            font-family: var(--font-body);
+            font-size: 14px;
+            background: none;
+            border: 1px solid var(--muted);
+            border-radius: 4px;
+            color: var(--secondary);
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        .logout-btn:hover { background: var(--error); border-color: var(--error); color: white; }
+
+        .main-content { margin-left: var(--sidebar-width); min-height: 100vh; }
+        .topbar {
+            position: sticky;
+            top: 0;
+            background: var(--surface);
+            border-bottom: 1px solid var(--muted);
+            padding: 16px 32px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            z-index: 50;
+        }
+        .topbar-title { font-size: 20px; font-weight: 600; }
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 20px;
+            font-family: var(--font-body);
+            font-size: 14px;
+            font-weight: 500;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            text-decoration: none;
+        }
+        .btn-primary { background: var(--primary); color: white; }
+        .btn-primary:hover { background: var(--accent); }
+        .btn-secondary { background: var(--muted); color: var(--primary); }
+        .btn-secondary:hover { background: var(--secondary); color: white; }
+        .btn-danger { background: var(--error); color: white; }
+
+        .content { padding: 32px; }
+
+        .form-card {
+            background: var(--surface);
+            border-radius: 12px;
+            border: 1px solid var(--muted);
+            padding: 32px;
+            margin-bottom: 24px;
+        }
+        .form-card-title {
+            font-family: var(--font-heading);
+            font-size: 20px;
+            margin-bottom: 24px;
+            padding-bottom: 16px;
+            border-bottom: 1px solid var(--muted);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .form-row {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 20px;
+        }
+        .form-group { margin-bottom: 20px; }
+        .form-group.full { grid-column: 1 / -1; }
+        .form-label {
+            display: block;
+            font-size: 13px;
+            font-weight: 500;
+            color: var(--primary);
+            margin-bottom: 8px;
+        }
+        .form-input, .form-textarea {
+            width: 100%;
+            padding: 12px 16px;
+            font-family: var(--font-body);
+            font-size: 14px;
+            background: var(--background);
+            border: 1px solid var(--muted);
+            border-radius: 4px;
+            outline: none;
+            transition: border-color 0.2s ease;
+        }
+        .form-input:focus, .form-textarea:focus { border-color: var(--accent); }
+        .form-textarea { resize: vertical; min-height: 80px; }
+
+        .list-item {
+            background: var(--background);
+            border: 1px solid var(--muted);
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 16px;
+            position: relative;
+        }
+        .list-item-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 12px;
+        }
+        .list-item-title {
+            font-family: var(--font-heading);
+            font-size: 18px;
+            font-weight: 500;
+        }
+        .list-item-actions {
+            display: flex;
+            gap: 8px;
+        }
+        .list-item-btn {
+            width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: var(--surface);
+            border: 1px solid var(--muted);
+            border-radius: 4px;
+            cursor: pointer;
+            color: var(--secondary);
+            transition: all 0.2s ease;
+        }
+        .list-item-btn:hover { border-color: var(--accent); color: var(--accent); }
+        .list-item-btn.delete:hover { border-color: var(--error); color: var(--error); }
+        .list-item-meta {
+            font-size: 13px;
+            color: var(--accent);
+            margin-bottom: 8px;
+        }
+        .list-item-desc {
+            font-size: 14px;
+            color: var(--secondary);
+            line-height: 1.6;
+        }
+
+        .skills-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 24px;
+        }
+        .skill-category-card {
+            background: var(--background);
+            border: 1px solid var(--muted);
+            border-radius: 8px;
+            padding: 20px;
+        }
+        .skill-category-title {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--primary);
+            margin-bottom: 12px;
+        }
+        .skill-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+        .skill-tag {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 12px;
+            background: var(--surface);
+            border: 1px solid var(--muted);
+            border-radius: 20px;
+            font-size: 13px;
+            color: var(--secondary);
+        }
+        .skill-tag .remove {
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            background: none;
+            border: none;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--secondary);
+            transition: all 0.2s ease;
+        }
+        .skill-tag .remove:hover { background: var(--error); color: white; }
+        .add-skill {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 6px 12px;
+            background: none;
+            border: 1px dashed var(--muted);
+            border-radius: 20px;
+            font-family: var(--font-body);
+            font-size: 13px;
+            color: var(--secondary);
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        .add-skill:hover { border-color: var(--accent); color: var(--accent); }
+
+        /* Skill with image upload */
+        .skill-item-wrapper {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+        .skill-tag {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 12px;
+            background: var(--surface);
+            border: 1px solid var(--muted);
+            border-radius: 20px;
+            font-size: 13px;
+            color: var(--secondary);
+        }
+        .skill-icon-upload {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            border: 1px dashed var(--muted);
+            background: var(--surface);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--secondary);
+            transition: all 0.2s ease;
+            overflow: hidden;
+        }
+        .skill-icon-upload:hover {
+            border-color: var(--accent);
+            color: var(--accent);
+        }
+        .skill-icon-upload img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        .skill-icon-upload input {
+            display: none;
+        }
+        .skill-with-icon {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 12px;
+            background: var(--surface);
+            border: 1px solid var(--muted);
+            border-radius: 20px;
+            font-size: 13px;
+            color: var(--secondary);
+        }
+        .skill-with-icon img {
+            width: 20px;
+            height: 20px;
+            border-radius: 4px;
+            object-fit: contain;
+        }
+
+        .avatar-upload {
+            display: flex;
+            align-items: center;
+            gap: 24px;
+        }
+        .avatar-preview {
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            overflow: hidden;
+            border: 2px solid var(--muted);
+            flex-shrink: 0;
+        }
+        .avatar-preview img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        .avatar-upload-area { flex: 1; }
+        .avatar-upload-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 20px;
+            background: var(--background);
+            border: 1px dashed var(--muted);
+            border-radius: 4px;
+            font-family: var(--font-body);
+            font-size: 14px;
+            color: var(--secondary);
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        .avatar-upload-btn:hover { border-color: var(--accent); color: var(--accent); }
+        .avatar-upload-hint { font-size: 12px; color: #aaa; margin-top: 8px; }
+
+        .toast {
+            position: fixed;
+            bottom: 24px; right: 24px;
+            padding: 16px 24px;
+            background: var(--primary);
+            color: white;
+            border-radius: 8px;
+            font-size: 14px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+            transform: translateY(100px);
+            opacity: 0;
+            transition: all 0.3s ease;
+            z-index: 1000;
+        }
+        .toast.show { transform: translateY(0); opacity: 1; }
+        .toast.success { background: var(--success); }
+        .toast.error { background: var(--error); }
+
+        #avatarInput { display: none; }
+
+        .modal-overlay {
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+        }
+        .modal-overlay.show { opacity: 1; visibility: visible; }
+        .modal {
+            background: var(--surface);
+            border-radius: 12px;
+            padding: 32px;
+            width: 90%;
+            max-width: 600px;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+        .modal-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 24px;
+        }
+        .modal-title {
+            font-family: var(--font-heading);
+            font-size: 24px;
+            font-weight: 500;
+        }
+        .modal-close {
+            width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: none;
+            border: none;
+            cursor: pointer;
+            color: var(--secondary);
+            transition: color 0.2s ease;
+        }
+        .modal-close:hover { color: var(--error); }
+        .modal-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 12px;
+            margin-top: 24px;
+        }
+
+        @media (max-width: 768px) {
+            .sidebar { transform: translateX(-100%); }
+            .main-content { margin-left: 0; }
+            .content { padding: 16px; }
+            .form-row { grid-template-columns: 1fr; }
+            .skills-grid { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+    <aside class="sidebar">
+        <div class="sidebar-header">
+            <a href="index.html" class="sidebar-logo">张三</a>
+            <p class="sidebar-subtitle">设计工作室管理后台</p>
+        </div>
+        <nav class="sidebar-nav">
+            <div class="nav-section">
+                <div class="nav-section-title">概览</div>
+                <a href="admin-dashboard.html" class="nav-item">
+                    <i data-lucide="layout-dashboard"></i>
+                    <span>仪表盘</span>
+                </a>
+                <a href="admin-analytics.html" class="nav-item">
+                    <i data-lucide="bar-chart-2"></i>
+                    <span>访问分析</span>
+                </a>
+            </div>
+            <div class="nav-section">
+                <div class="nav-section-title">内容管理</div>
+                <a href="admin-banner.html" class="nav-item">
+                    <i data-lucide="layout-template"></i>
+                    <span>Banner管理</span>
+                </a>
+                <a href="admin-works.html" class="nav-item">
+                    <i data-lucide="image"></i>
+                    <span>作品管理</span>
+                </a>
+                <a href="admin-about.html" class="nav-item">
+                    <i data-lucide="user"></i>
+                    <span>设计师简介</span>
+                </a>
+                <a href="admin-resume.html" class="nav-item active">
+                    <i data-lucide="file-text"></i>
+                    <span>个人简历</span>
+                </a>
+                <a href="admin-contacts.html" class="nav-item">
+                    <i data-lucide="mail"></i>
+                    <span>联系数据</span>
+                </a>
+            </div>
+            <div class="nav-section">
+                <div class="nav-section-title">系统</div>
+                <a href="admin-settings.html" class="nav-item">
+                    <i data-lucide="settings"></i>
+                    <span>设置</span>
+                </a>
+            </div>
+        </nav>
+        <div class="sidebar-footer">
+            <div class="user-info">
+                <div class="user-avatar" id="userAvatar">A</div>
+                <div>
+                    <div class="user-name" id="userName">Admin</div>
+                    <div class="user-role">管理员</div>
+                </div>
+            </div>
+            <button class="logout-btn" id="logoutBtn">
+                <i data-lucide="log-out" width="18" height="18"></i>
+                退出登录
+            </button>
+        </div>
+    </aside>
+
+    <main class="main-content">
+        <header class="topbar">
+            <h1 class="topbar-title">个人简历</h1>
+            <div style="display: flex; gap: 12px;">
+                <a href="admin-resume-audit.html" class="btn btn-secondary" style="text-decoration: none;">
+                    <i data-lucide="git-pull-request" width="18" height="18"></i>
+                    审核记录
+                </a>
+                <button class="btn btn-secondary" id="previewBtn">
+                    <i data-lucide="eye" width="18" height="18"></i>
+                    预览简历
+                </button>
+                <button class="btn btn-secondary" id="saveBtn">
+                    <i data-lucide="save" width="18" height="18"></i>
+                    直接保存
+                </button>
+                <button class="btn btn-primary" id="submitReviewBtn">
+                    <i data-lucide="send" width="18" height="18"></i>
+                    提交审核
+                </button>
+            </div>
+        </header>
+
+        <div class="content">
+            <div class="form-card">
+                <h2 class="form-card-title">基本信息</h2>
+                
+                <div class="form-group">
+                    <label class="form-label">头像</label>
+                    <div class="avatar-upload">
+                        <div class="avatar-preview" id="avatarPreview">
+                            <img src="" alt="头像预览" id="avatarImg">
+                        </div>
+                        <div class="avatar-upload-area">
+                            <button type="button" class="avatar-upload-btn" id="uploadAvatarBtn">
+                                <i data-lucide="upload" width="16" height="16"></i>
+                                上传头像
+                            </button>
+                            <p class="avatar-upload-hint">建议使用正方形图片</p>
+                        </div>
+                    </div>
+                    <input type="file" id="avatarInput" accept="image/*">
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">姓名 *</label>
+                        <input type="text" class="form-input" id="resumeName" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">头衔 *</label>
+                        <input type="text" class="form-input" id="resumeTitle" required>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">个人简介</label>
+                    <textarea class="form-textarea" id="resumeSummary"></textarea>
+                </div>
+            </div>
+
+            <div class="form-card">
+                <h2 class="form-card-title">
+                    <span>工作经验</span>
+                    <button class="btn btn-secondary" style="padding: 6px 12px; font-size: 13px;" onclick="addExperience()">
+                        <i data-lucide="plus" width="14" height="14"></i>
+                        添加
+                    </button>
+                </h2>
+                <div id="experienceList"></div>
+            </div>
+
+            <div class="form-card">
+                <h2 class="form-card-title">
+                    <span>教育背景</span>
+                    <button class="btn btn-secondary" style="padding: 6px 12px; font-size: 13px;" onclick="addEducation()">
+                        <i data-lucide="plus" width="14" height="14"></i>
+                        添加
+                    </button>
+                </h2>
+                <div id="educationList"></div>
+            </div>
+
+            <div class="form-card">
+                <h2 class="form-card-title">擅长软件与技能</h2>
+                <div class="skills-grid" id="skillsGrid"></div>
+            </div>
+
+            <div class="form-card">
+                <h2 class="form-card-title">
+                    <span>荣誉奖项</span>
+                    <button class="btn btn-secondary" style="padding: 6px 12px; font-size: 13px;" onclick="addAward()">
+                        <i data-lucide="plus" width="14" height="14"></i>
+                        添加
+                    </button>
+                </h2>
+                <div id="awardsList"></div>
+            </div>
+        </div>
+    </main>
+
+    <div class="modal-overlay" id="modalOverlay">
+        <div class="modal">
+            <div class="modal-header">
+                <h3 class="modal-title" id="modalTitle">编辑</h3>
+                <button class="modal-close" onclick="closeModal()">
+                    <i data-lucide="x" width="20" height="20"></i>
+                </button>
+            </div>
+            <div id="modalContent"></div>
+            <div class="modal-actions">
+                <button class="btn btn-secondary" onclick="closeModal()">取消</button>
+                <button class="btn btn-primary" id="modalSaveBtn">保存</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="toast" id="toast"></div>
+
+    <script>
+        // 等 DOM 完全加载后再执行
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('[Admin] Page loading...');
+            
+            function checkAuth() {
+                const session = JSON.parse(localStorage.getItem('portfolio_session') || sessionStorage.getItem('portfolio_session') || 'null');
+                if (!session || !session.isLoggedIn) window.location.href = 'admin-login.html';
+                return session;
+            }
+
+            const session = checkAuth();
+            if (session) {
+                document.getElementById('userName').textContent = session.username;
+                document.getElementById('userAvatar').textContent = session.username.charAt(0).toUpperCase();
+            }
+
+            document.getElementById('logoutBtn').addEventListener('click', () => {
+                localStorage.removeItem('portfolio_session');
+                sessionStorage.removeItem('portfolio_session');
+                window.location.href = 'admin-login.html';
+            });
+
+            document.getElementById('previewBtn').addEventListener('click', () => {
+                window.open('resume.html', '_blank');
+            });
+
+            let resumeData = WorksData.getResume();
+            console.log('[Admin] Resume data loaded:', resumeData ? 'success' : 'failed');
+
+        // 提交审核按钮
+        document.getElementById('submitReviewBtn').addEventListener('click', function(e) {
+            console.log('[Admin] submitReviewBtn clicked');
+            e.preventDefault();
+            e.stopPropagation();
+            try {
+                console.log('[Admin] Step 1: Updating resume data...');
+                updateResumeData();
+                console.log('[Admin] Step 2: Checking pending changes...');
+                const pending = WorksData.getPendingResumeChanges();
+                if (pending.length > 0) {
+                    showToast('您有未审核的修改，请先等待审核完成', 'error');
+                    return;
+                }
+                
+                console.log('[Admin] Step 3: Showing confirm dialog...');
+                const confirmed = confirm('确定要提交修改吗？提交后将进入审核流程。');
+                console.log('[Admin] Confirm result:', confirmed);
+                
+                if (confirmed) {
+                    console.log('[Admin] Step 4: Submitting resume for review...');
+                    const result = WorksData.submitResumeForReview(resumeData, session?.username || 'admin');
+                    console.log('[Admin] Submit result:', result);
+                    if (result) {
+                        WorksData.addLog('resume_review', '提交简历修改待审核');
+                        showToast('修改已提交审核', 'success');
+                        // 跳转到审核页面
+                        setTimeout(() => {
+                            window.location.href = 'admin-resume-audit.html';
+                        }, 1000);
+                    }
+                }
+            } catch (err) {
+                console.error('[Admin] Error submitting review:', err);
+                showToast('提交失败: ' + err.message, 'error');
+            }
+        });
+
+        function updateResumeData() {
+            resumeData.name = document.getElementById('resumeName').value.trim();
+            resumeData.title = document.getElementById('resumeTitle').value.trim();
+            resumeData.summary = document.getElementById('resumeSummary').value.trim();
+        }
+
+        function loadResumeData() {
+            document.getElementById('resumeName').value = resumeData.name || '';
+            document.getElementById('resumeTitle').value = resumeData.title || '';
+            document.getElementById('resumeSummary').value = resumeData.summary || '';
+            if (resumeData.avatar) {
+                document.getElementById('avatarImg').src = resumeData.avatar;
+            }
+            renderExperience();
+            renderEducation();
+            renderSkills();
+            renderAwards();
+        }
+
+        function renderExperience() {
+            const list = document.getElementById('experienceList');
+            if (resumeData.experience.length === 0) {
+                list.innerHTML = '<p style="color: var(--secondary); text-align: center; padding: 20px;">暂无工作经验</p>';
+                return;
+            }
+            list.innerHTML = resumeData.experience.map((exp, i) => `
+                <div class="list-item">
+                    <div class="list-item-header">
+                        <span class="list-item-title">${exp.company}</span>
+                        <div class="list-item-actions">
+                            <button class="list-item-btn" onclick="editExperience(${i})">
+                                <i data-lucide="edit-2" width="16" height="16"></i>
+                            </button>
+                            <button class="list-item-btn delete" onclick="deleteExperience(${i})">
+                                <i data-lucide="trash-2" width="16" height="16"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="list-item-meta">${exp.period} · ${exp.role}</div>
+                    <div class="list-item-desc">${exp.desc}</div>
+                </div>
+            `).join('');
+            lucide.createIcons();
+        }
+
+        function addExperience() {
+            showModal('添加工作经验', `
+                <div class="form-group">
+                    <label class="form-label">时间区间</label>
+                    <input type="text" class="form-input" id="expPeriod" placeholder="如: 2021 - 至今">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">公司名称</label>
+                    <input type="text" class="form-input" id="expCompany" placeholder="公司名称">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">职位</label>
+                    <input type="text" class="form-input" id="expRole" placeholder="担任职位">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">工作描述</label>
+                    <textarea class="form-textarea" id="expDesc" placeholder="工作内容和成就"></textarea>
+                </div>
+            `, () => {
+                const exp = {
+                    period: document.getElementById('expPeriod').value.trim(),
+                    company: document.getElementById('expCompany').value.trim(),
+                    role: document.getElementById('expRole').value.trim(),
+                    desc: document.getElementById('expDesc').value.trim()
+                };
+                if (!exp.company) { alert('请输入公司名称'); return; }
+                resumeData.experience.push(exp);
+                renderExperience();
+                closeModal();
+                showToast('工作经验已添加');
+            });
+        }
+
+        function editExperience(index) {
+            const exp = resumeData.experience[index];
+            showModal('编辑工作经验', `
+                <div class="form-group">
+                    <label class="form-label">时间区间</label>
+                    <input type="text" class="form-input" id="expPeriod" value="${exp.period}">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">公司名称</label>
+                    <input type="text" class="form-input" id="expCompany" value="${exp.company}">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">职位</label>
+                    <input type="text" class="form-input" id="expRole" value="${exp.role}">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">工作描述</label>
+                    <textarea class="form-textarea" id="expDesc">${exp.desc}</textarea>
+                </div>
+            `, () => {
+                resumeData.experience[index] = {
+                    period: document.getElementById('expPeriod').value.trim(),
+                    company: document.getElementById('expCompany').value.trim(),
+                    role: document.getElementById('expRole').value.trim(),
+                    desc: document.getElementById('expDesc').value.trim()
+                };
+                renderExperience();
+                closeModal();
+                showToast('工作经验已更新');
+            });
+        }
+
+        function deleteExperience(index) {
+            if (confirm('确定删除这条工作经验？')) {
+                resumeData.experience.splice(index, 1);
+                renderExperience();
+                showToast('工作经验已删除');
+            }
+        }
+
+        function renderEducation() {
+            const list = document.getElementById('educationList');
+            if (resumeData.education.length === 0) {
+                list.innerHTML = '<p style="color: var(--secondary); text-align: center; padding: 20px;">暂无教育背景</p>';
+                return;
+            }
+            list.innerHTML = resumeData.education.map((edu, i) => `
+                <div class="list-item">
+                    <div class="list-item-header">
+                        <span class="list-item-title">${edu.school}</span>
+                        <div class="list-item-actions">
+                            <button class="list-item-btn" onclick="editEducation(${i})">
+                                <i data-lucide="edit-2" width="16" height="16"></i>
+                            </button>
+                            <button class="list-item-btn delete" onclick="deleteEducation(${i})">
+                                <i data-lucide="trash-2" width="16" height="16"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="list-item-meta">${edu.period} · ${edu.major} · ${edu.degree}</div>
+                </div>
+            `).join('');
+            lucide.createIcons();
+        }
+
+        function addEducation() {
+            showModal('添加教育背景', `
+                <div class="form-group">
+                    <label class="form-label">时间区间</label>
+                    <input type="text" class="form-input" id="eduPeriod" placeholder="如: 2012 - 2016">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">学校名称</label>
+                    <input type="text" class="form-input" id="eduSchool" placeholder="学校名称">
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">专业</label>
+                        <input type="text" class="form-input" id="eduMajor" placeholder="所学专业">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">学位</label>
+                        <input type="text" class="form-input" id="eduDegree" placeholder="学士/硕士">
+                    </div>
+                </div>
+            `, () => {
+                const edu = {
+                    period: document.getElementById('eduPeriod').value.trim(),
+                    school: document.getElementById('eduSchool').value.trim(),
+                    major: document.getElementById('eduMajor').value.trim(),
+                    degree: document.getElementById('eduDegree').value.trim()
+                };
+                if (!edu.school) { alert('请输入学校名称'); return; }
+                resumeData.education.push(edu);
+                renderEducation();
+                closeModal();
+                showToast('教育背景已添加');
+            });
+        }
+
+        function editEducation(index) {
+            const edu = resumeData.education[index];
+            showModal('编辑教育背景', `
+                <div class="form-group">
+                    <label class="form-label">时间区间</label>
+                    <input type="text" class="form-input" id="eduPeriod" value="${edu.period}">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">学校名称</label>
+                    <input type="text" class="form-input" id="eduSchool" value="${edu.school}">
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">专业</label>
+                        <input type="text" class="form-input" id="eduMajor" value="${edu.major}">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">学位</label>
+                        <input type="text" class="form-input" id="eduDegree" value="${edu.degree}">
+                    </div>
+                </div>
+            `, () => {
+                resumeData.education[index] = {
+                    period: document.getElementById('eduPeriod').value.trim(),
+                    school: document.getElementById('eduSchool').value.trim(),
+                    major: document.getElementById('eduMajor').value.trim(),
+                    degree: document.getElementById('eduDegree').value.trim()
+                };
+                renderEducation();
+                closeModal();
+                showToast('教育背景已更新');
+            });
+        }
+
+        function deleteEducation(index) {
+            if (confirm('确定删除这条教育背景？')) {
+                resumeData.education.splice(index, 1);
+                renderEducation();
+                showToast('教育背景已删除');
+            }
+        }
+
+        function renderSkills() {
+            const grid = document.getElementById('skillsGrid');
+            grid.innerHTML = resumeData.skills.map((cat, catIndex) => `
+                <div class="skill-category-card">
+                    <div class="skill-category-title">${cat.category}</div>
+                    <div class="skill-tags">
+                        ${cat.items.map((skill, skillIndex) => {
+                            const skillItem = typeof skill === 'string' ? { name: skill, icon: '' } : skill;
+                            return `
+                            <div class="skill-item-wrapper">
+                                <label class="skill-icon-upload" title="上传图标">
+                                    ${skillItem.icon ? `<img src="${skillItem.icon}" alt="icon">` : '<i data-lucide="image-plus" width="14" height="14"></i>'}
+                                    <input type="file" accept="image/*" onchange="uploadSkillIcon(${catIndex}, ${skillIndex}, this)">
+                                </label>
+                                <span class="skill-with-icon">
+                                    ${skillItem.icon ? `<img src="${skillItem.icon}" alt="${skillItem.name}">` : ''}
+                                    ${skillItem.name}
+                                </span>
+                                <button class="remove" onclick="removeSkill(${catIndex}, ${skillIndex})">
+                                    <i data-lucide="x" width="12" height="12"></i>
+                                </button>
+                            </div>
+                        `}).join('')}
+                        <button class="add-skill" onclick="addSkill(${catIndex})">
+                            <i data-lucide="plus" width="12" height="12"></i>
+                            添加
+                        </button>
+                    </div>
+                </div>
+            `).join('');
+            lucide.createIcons();
+        }
+
+        function uploadSkillIcon(catIndex, skillIndex, input) {
+            const file = input.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = (event) => {
+                const skill = resumeData.skills[catIndex].items[skillIndex];
+                const skillItem = typeof skill === 'string' ? { name: skill, icon: '' } : skill;
+                skillItem.icon = event.target.result;
+                resumeData.skills[catIndex].items[skillIndex] = skillItem;
+                renderSkills();
+                showToast('图标已上传');
+            };
+            reader.readAsDataURL(file);
+        }
+
+        function addSkill(catIndex) {
+            const skill = prompt('请输入技能名称:');
+            if (skill && skill.trim()) {
+                resumeData.skills[catIndex].items.push({ name: skill.trim(), icon: '' });
+                renderSkills();
+                showToast('技能已添加');
+            }
+        }
+
+        function removeSkill(catIndex, skillIndex) {
+            resumeData.skills[catIndex].items.splice(skillIndex, 1);
+            renderSkills();
+            showToast('技能已移除');
+        }
+
+        function renderAwards() {
+            const list = document.getElementById('awardsList');
+            if (resumeData.awards.length === 0) {
+                list.innerHTML = '<p style="color: var(--secondary); text-align: center; padding: 20px;">暂无荣誉奖项</p>';
+                return;
+            }
+            list.innerHTML = resumeData.awards.map((award, i) => `
+                <div class="list-item">
+                    <div class="list-item-header">
+                        <span class="list-item-title">${award.title}</span>
+                        <div class="list-item-actions">
+                            <button class="list-item-btn" onclick="editAward(${i})">
+                                <i data-lucide="edit-2" width="16" height="16"></i>
+                            </button>
+                            <button class="list-item-btn delete" onclick="deleteAward(${i})">
+                                <i data-lucide="trash-2" width="16" height="16"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="list-item-meta">${award.year} · ${award.org}</div>
+                </div>
+            `).join('');
+            lucide.createIcons();
+        }
+
+        function addAward() {
+            showModal('添加荣誉奖项', `
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">年份</label>
+                        <input type="text" class="form-input" id="awardYear" placeholder="如: 2024">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">奖项名称</label>
+                        <input type="text" class="form-input" id="awardTitle" placeholder="奖项名称">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">主办方</label>
+                    <input type="text" class="form-input" id="awardOrg" placeholder="主办机构">
+                </div>
+            `, () => {
+                const award = {
+                    year: document.getElementById('awardYear').value.trim(),
+                    title: document.getElementById('awardTitle').value.trim(),
+                    org: document.getElementById('awardOrg').value.trim()
+                };
+                if (!award.title) { alert('请输入奖项名称'); return; }
+                resumeData.awards.push(award);
+                renderAwards();
+                closeModal();
+                showToast('奖项已添加');
+            });
+        }
+
+        function editAward(index) {
+            const award = resumeData.awards[index];
+            showModal('编辑荣誉奖项', `
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">年份</label>
+                        <input type="text" class="form-input" id="awardYear" value="${award.year}">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">奖项名称</label>
+                        <input type="text" class="form-input" id="awardTitle" value="${award.title}">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">主办方</label>
+                    <input type="text" class="form-input" id="awardOrg" value="${award.org}">
+                </div>
+            `, () => {
+                resumeData.awards[index] = {
+                    year: document.getElementById('awardYear').value.trim(),
+                    title: document.getElementById('awardTitle').value.trim(),
+                    org: document.getElementById('awardOrg').value.trim()
+                };
+                renderAwards();
+                closeModal();
+                showToast('奖项已更新');
+            });
+        }
+
+        function deleteAward(index) {
+            if (confirm('确定删除这个奖项？')) {
+                resumeData.awards.splice(index, 1);
+                renderAwards();
+                showToast('奖项已删除');
+            }
+        }
+
+        let currentModalSave = null;
+
+        function showModal(title, content, onSave) {
+            document.getElementById('modalTitle').textContent = title;
+            document.getElementById('modalContent').innerHTML = content;
+            currentModalSave = onSave;
+            document.getElementById('modalOverlay').classList.add('show');
+            document.getElementById('modalSaveBtn').onclick = onSave;
+            lucide.createIcons();
+        }
+
+        function closeModal() {
+            document.getElementById('modalOverlay').classList.remove('show');
+            currentModalSave = null;
+        }
+
+        document.getElementById('uploadAvatarBtn').addEventListener('click', () => {
+            document.getElementById('avatarInput').click();
+        });
+
+        document.getElementById('avatarInput').addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = (event) => {
+                resumeData.avatar = event.target.result;
+                document.getElementById('avatarImg').src = event.target.result;
+            };
+            reader.readAsDataURL(file);
+        });
+
+        document.getElementById('saveBtn').addEventListener('click', function(e) {
+            console.log('[Admin] saveBtn clicked');
+            e.preventDefault();
+            e.stopPropagation();
+            try {
+                console.log('[Admin] Step 1: Showing confirm dialog...');
+                const confirmed = confirm('确定要直接保存吗？此操作将立即生效。');
+                console.log('[Admin] Confirm result:', confirmed);
+                
+                if (confirmed) {
+                    console.log('[Admin] Step 2: Updating resume data...');
+                    updateResumeData();
+                    console.log('[Admin] Step 3: Saving resume to WorksData...');
+                    WorksData.saveResume(resumeData);
+                    console.log('[Admin] Step 4: Adding history record...');
+                    WorksData.addResumeHistory('update', null, resumeData, session?.username || 'admin');
+                    console.log('[Admin] Step 5: Adding log...');
+                    WorksData.addLog('resume_edit', '直接保存个人简历');
+                    showToast('简历已保存', 'success');
+                    console.log('[Admin] Resume saved successfully');
+                }
+            } catch (err) {
+                console.error('[Admin] Error saving resume:', err);
+                showToast('保存失败: ' + err.message, 'error');
+            }
+        });
+
+        function showToast(message, type = 'info') {
+            const toast = document.getElementById('toast');
+            toast.textContent = message;
+            toast.className = `toast ${type}`;
+            toast.classList.add('show');
+            setTimeout(() => toast.classList.remove('show'), 3000);
+        }
+
+        // ========== 用户访问追踪 ==========
+        (function() {
+            const currentPage = 'admin-resume.html';
+            const userId = session?.username || 'admin';
+
+            WorksData.startPageView(currentPage, userId);
+            WorksData.recordVisit(currentPage, userId);
+
+            let maxScroll = 0;
+            window.addEventListener('scroll', function() {
+                const scrollPercent = Math.round((window.scrollY / (document.body.scrollHeight - window.innerHeight)) * 100);
+                if (scrollPercent > maxScroll) {
+                    maxScroll = scrollPercent;
+                    WorksData.updateScrollDepth(maxScroll);
+                }
+            });
+
+            document.addEventListener('click', function() {
+                WorksData.incrementInteractions();
+            });
+
+            window.addEventListener('beforeunload', function() {
+                WorksData.endPageView();
+            });
+
+            document.addEventListener('visibilitychange', function() {
+                if (document.hidden) {
+                    WorksData.endPageView();
+                } else {
+                    WorksData.startPageView(currentPage, userId);
+                }
+            });
+        })();
+
+        // 初始化 Lucide 图标
+        lucide.createIcons();
+        console.log('[Admin] Lucide icons initialized');
+
+        loadResumeData();
+
+        console.log('[Admin] Page fully loaded');
+        console.log('[Admin] Checking button bindings...');
+        console.log('[Admin] saveBtn:', document.getElementById('saveBtn') ? 'found' : 'NOT FOUND');
+        console.log('[Admin] submitReviewBtn:', document.getElementById('submitReviewBtn') ? 'found' : 'NOT FOUND');
+        console.log('[Admin] WorksData:', typeof WorksData !== 'undefined' ? 'loaded' : 'NOT LOADED');
+        }); // 结束 DOMContentLoaded
+    </script>
+</body>
+</html>

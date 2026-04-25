@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>云端连接测试</title>
+    <style>
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; max-width: 600px; margin: 50px auto; padding: 20px; }
+        h1 { color: #333; }
+        .test-btn { background: #4CAF50; color: white; border: none; padding: 15px 30px; font-size: 16px; cursor: pointer; border-radius: 5px; }
+        .test-btn:hover { background: #45a049; }
+        .result { margin-top: 20px; padding: 15px; background: #f5f5f5; border-radius: 5px; }
+        .success { color: green; }
+        .error { color: red; }
+        pre { background: #eee; padding: 10px; border-radius: 3px; overflow-x: auto; font-size: 12px; }
+    </style>
+</head>
+<body>
+    <h1>☁️ 云端连接测试</h1>
+    <p>API 地址: <code id="apiUrl"></code></p>
+    <button class="test-btn" onclick="runTest()">运行测试</button>
+    <div id="result" class="result" style="display:none;"></div>
+    
+    <script>
+        const API_URL = 'https://ai-native-d0gc0n8ngab6ad9a9-1424489190.ap-shanghai.app.tcloudbase.com/site-api';
+        document.getElementById('apiUrl').textContent = API_URL;
+        
+        async function runTest() {
+            const resultDiv = document.getElementById('result');
+            resultDiv.style.display = 'block';
+            resultDiv.innerHTML = '<p>测试中...</p>';
+            
+            try {
+                // 1. 写入测试
+                const testData = { test: true, time: Date.now(), browser: 'direct_test' };
+                const setResponse = await fetch(API_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ action: 'set', key: '_browser_direct_test', value: testData })
+                });
+                const setResult = await setResponse.json();
+                
+                // 2. 等待
+                await new Promise(r => setTimeout(r, 600));
+                
+                // 3. 读取验证
+                const getResponse = await fetch(API_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ action: 'get' })
+                });
+                const getResult = await getResponse.json();
+                
+                // 4. 显示结果
+                const verified = getResult.data && getResult.data._browser_direct_test;
+                const worksCount = getResult.data && getResult.data.works ? getResult.data.works.length : 0;
+                
+                let html = '';
+                html += `<p class="${setResult.success ? 'success' : 'error'}">1. 写入测试: ${setResult.success ? '✅ 成功' : '❌ 失败'}</p>`;
+                html += `<p class="${verified ? 'success' : 'error'}">2. 读取验证: ${verified ? '✅ 成功' : '❌ 失败'}</p>`;
+                html += `<p class="success">3. 数据统计: ${getResult.count} 条记录</p>`;
+                html += `<p class="success">4. 作品数据: ${worksCount} 条</p>`;
+                html += `<p class="${worksCount > 0 ? 'success' : 'error'}">5. 最终结果: ${worksCount > 0 && verified ? '✅ 云端同步正常！' : '❌ 存在问题'}</p>`;
+                html += `<pre>写入响应: ${JSON.stringify(setResult, null, 2)}</pre>`;
+                html += `<pre>验证数据存在: ${!!getResult.data._browser_direct_test}</pre>`;
+                
+                resultDiv.innerHTML = html;
+                
+            } catch (err) {
+                resultDiv.innerHTML = `<p class="error">错误: ${err.message}</p>`;
+            }
+        }
+    </script>
+</body>
+</html>

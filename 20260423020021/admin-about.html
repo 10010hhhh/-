@@ -1,0 +1,766 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>设计师简介 | 张三设计工作室</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="/hh/cloud-api.js?v=2026042304"></script>
+    <script src="/hh/data-manager.js?v=2026042304"></script>
+    <style>
+        :root {
+            --primary: #1a1a1a;
+            --secondary: #666666;
+            --accent: #c9a87c;
+            --background: #fafafa;
+            --surface: #ffffff;
+            --muted: #e8e8e8;
+            --error: #dc3545;
+            --success: #28a745;
+            --font-heading: 'Cormorant Garamond', serif;
+            --font-body: 'Inter', sans-serif;
+            --sidebar-width: 260px;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: var(--font-body);
+            background-color: var(--background);
+            color: var(--primary);
+            min-height: 100vh;
+        }
+
+        .sidebar {
+            position: fixed;
+            left: 0; top: 0;
+            width: var(--sidebar-width);
+            height: 100vh;
+            background: var(--surface);
+            border-right: 1px solid var(--muted);
+            display: flex;
+            flex-direction: column;
+            z-index: 100;
+        }
+
+        .sidebar-header { padding: 24px; border-bottom: 1px solid var(--muted); }
+        .sidebar-logo {
+            font-family: var(--font-heading);
+            font-size: 24px;
+            font-weight: 600;
+            color: var(--primary);
+            letter-spacing: 2px;
+            text-decoration: none;
+            display: block;
+        }
+        .sidebar-subtitle { font-size: 12px; color: var(--secondary); margin-top: 4px; }
+        .sidebar-nav { flex: 1; padding: 16px 0; overflow-y: auto; }
+        .nav-section { margin-bottom: 24px; }
+        .nav-section-title {
+            padding: 8px 24px;
+            font-size: 11px;
+            font-weight: 600;
+            color: var(--secondary);
+            letter-spacing: 1.5px;
+            text-transform: uppercase;
+        }
+        .nav-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 24px;
+            font-size: 14px;
+            color: var(--secondary);
+            text-decoration: none;
+            transition: all 0.2s ease;
+            border-left: 3px solid transparent;
+        }
+        .nav-item:hover { background: var(--background); color: var(--primary); }
+        .nav-item.active { background: rgba(201, 168, 124, 0.1); color: var(--accent); border-left-color: var(--accent); }
+        .sidebar-footer { padding: 16px 24px; border-top: 1px solid var(--muted); }
+        .user-info { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; }
+        .user-avatar {
+            width: 40px; height: 40px;
+            background: var(--accent);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 600;
+        }
+        .user-name { font-size: 14px; font-weight: 500; }
+        .user-role { font-size: 12px; color: var(--secondary); }
+        .logout-btn {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            width: 100%;
+            padding: 10px 16px;
+            font-family: var(--font-body);
+            font-size: 14px;
+            background: none;
+            border: 1px solid var(--muted);
+            border-radius: 4px;
+            color: var(--secondary);
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        .logout-btn:hover { background: var(--error); border-color: var(--error); color: white; }
+
+        .main-content { margin-left: var(--sidebar-width); min-height: 100vh; }
+        .topbar {
+            position: sticky;
+            top: 0;
+            background: var(--surface);
+            border-bottom: 1px solid var(--muted);
+            padding: 16px 32px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            z-index: 50;
+        }
+        .topbar-title { font-size: 20px; font-weight: 600; }
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 20px;
+            font-family: var(--font-body);
+            font-size: 14px;
+            font-weight: 500;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            text-decoration: none;
+        }
+        .btn-primary { background: var(--primary); color: white; }
+        .btn-primary:hover { background: var(--accent); }
+
+        .content { padding: 32px; max-width: 900px; }
+
+        .form-card {
+            background: var(--surface);
+            border-radius: 12px;
+            border: 1px solid var(--muted);
+            padding: 32px;
+            margin-bottom: 24px;
+        }
+        .form-card-title {
+            font-family: var(--font-heading);
+            font-size: 20px;
+            margin-bottom: 24px;
+            padding-bottom: 16px;
+            border-bottom: 1px solid var(--muted);
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 20px;
+        }
+        .form-group { margin-bottom: 20px; }
+        .form-group.full { grid-column: 1 / -1; }
+        .form-label {
+            display: block;
+            font-size: 13px;
+            font-weight: 500;
+            color: var(--primary);
+            margin-bottom: 8px;
+        }
+        .form-input, .form-textarea {
+            width: 100%;
+            padding: 12px 16px;
+            font-family: var(--font-body);
+            font-size: 14px;
+            background: var(--background);
+            border: 1px solid var(--muted);
+            border-radius: 4px;
+            outline: none;
+            transition: border-color 0.2s ease;
+        }
+        .form-input:focus, .form-textarea:focus { border-color: var(--accent); }
+        .form-textarea { resize: vertical; min-height: 100px; }
+
+        /* Avatar Upload */
+        .avatar-upload {
+            display: flex;
+            align-items: center;
+            gap: 24px;
+        }
+        .avatar-preview {
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            overflow: hidden;
+            border: 2px solid var(--muted);
+            flex-shrink: 0;
+        }
+        .avatar-preview img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        .avatar-upload-area {
+            flex: 1;
+        }
+        .avatar-upload-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 20px;
+            background: var(--background);
+            border: 1px dashed var(--muted);
+            border-radius: 4px;
+            font-family: var(--font-body);
+            font-size: 14px;
+            color: var(--secondary);
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        .avatar-upload-btn:hover {
+            border-color: var(--accent);
+            color: var(--accent);
+        }
+        .avatar-upload-hint {
+            font-size: 12px;
+            color: #aaa;
+            margin-top: 8px;
+        }
+
+        /* Skills Tags */
+        .skills-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-top: 8px;
+        }
+        .skill-tag {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 12px;
+            background: var(--background);
+            border: 1px solid var(--muted);
+            border-radius: 20px;
+            font-size: 13px;
+            color: var(--secondary);
+        }
+        .skill-tag .remove {
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            background: none;
+            border: none;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--secondary);
+            transition: all 0.2s ease;
+        }
+        .skill-tag .remove:hover {
+            background: var(--error);
+            color: white;
+        }
+        .add-skill {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 6px 12px;
+            background: none;
+            border: 1px dashed var(--muted);
+            border-radius: 20px;
+            font-family: var(--font-body);
+            font-size: 13px;
+            color: var(--secondary);
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        .add-skill:hover {
+            border-color: var(--accent);
+            color: var(--accent);
+        }
+
+        /* Stats */
+        .stats-row {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 16px;
+        }
+        .stat-input-group {
+            position: relative;
+        }
+        .stat-input {
+            width: 100%;
+            padding: 12px 60px 12px 16px;
+            font-family: var(--font-body);
+            font-size: 14px;
+            background: var(--background);
+            border: 1px solid var(--muted);
+            border-radius: 4px;
+            outline: none;
+            transition: border-color 0.2s ease;
+        }
+        .stat-input:focus { border-color: var(--accent); }
+        .stat-suffix {
+            position: absolute;
+            right: 16px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 13px;
+            color: var(--secondary);
+            pointer-events: none;
+        }
+
+        /* Social Links */
+        .social-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 16px;
+        }
+        .social-input-group {
+            position: relative;
+        }
+        .social-input-group label {
+            display: block;
+            font-size: 12px;
+            color: var(--secondary);
+            margin-bottom: 6px;
+        }
+        .social-input {
+            width: 100%;
+            padding: 10px 16px;
+            font-family: var(--font-body);
+            font-size: 14px;
+            background: var(--background);
+            border: 1px solid var(--muted);
+            border-radius: 4px;
+            outline: none;
+            transition: border-color 0.2s ease;
+        }
+        .social-input:focus { border-color: var(--accent); }
+
+        .form-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 12px;
+            margin-top: 32px;
+            padding-top: 24px;
+            border-top: 1px solid var(--muted);
+        }
+
+        .toast {
+            position: fixed;
+            bottom: 24px; right: 24px;
+            padding: 16px 24px;
+            background: var(--primary);
+            color: white;
+            border-radius: 8px;
+            font-size: 14px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+            transform: translateY(100px);
+            opacity: 0;
+            transition: all 0.3s ease;
+            z-index: 1000;
+        }
+        .toast.show { transform: translateY(0); opacity: 1; }
+        .toast.success { background: var(--success); }
+        .toast.error { background: var(--error); }
+
+        /* Hidden file input */
+        #avatarInput { display: none; }
+
+        @media (max-width: 768px) {
+            .sidebar { transform: translateX(-100%); }
+            .main-content { margin-left: 0; }
+            .content { padding: 16px; }
+            .form-row { grid-template-columns: 1fr; }
+            .stats-row { grid-template-columns: 1fr; }
+            .social-grid { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+    <aside class="sidebar">
+        <div class="sidebar-header">
+            <a href="index.html" class="sidebar-logo">张三</a>
+            <p class="sidebar-subtitle">设计工作室管理后台</p>
+        </div>
+        <nav class="sidebar-nav">
+            <div class="nav-section">
+                <div class="nav-section-title">概览</div>
+                <a href="admin-dashboard.html" class="nav-item">
+                    <i data-lucide="layout-dashboard"></i>
+                    <span>仪表盘</span>
+                </a>
+                <a href="admin-analytics.html" class="nav-item">
+                    <i data-lucide="bar-chart-2"></i>
+                    <span>访问分析</span>
+                </a>
+            </div>
+            <div class="nav-section">
+                <div class="nav-section-title">内容管理</div>
+                <a href="admin-banner.html" class="nav-item">
+                    <i data-lucide="layout-template"></i>
+                    <span>Banner管理</span>
+                </a>
+                <a href="admin-works.html" class="nav-item">
+                    <i data-lucide="image"></i>
+                    <span>作品管理</span>
+                </a>
+                <a href="admin-about.html" class="nav-item active">
+                    <i data-lucide="user"></i>
+                    <span>设计师简介</span>
+                </a>
+                <a href="admin-resume.html" class="nav-item">
+                    <i data-lucide="file-text"></i>
+                    <span>个人简历</span>
+                    <span class="nav-badge" id="resumeAuditBadge">0</span>
+                </a>
+                <a href="admin-contacts.html" class="nav-item">
+                    <i data-lucide="mail"></i>
+                    <span>联系数据</span>
+                </a>
+            </div>
+            <div class="nav-section">
+                <div class="nav-section-title">系统</div>
+                <a href="admin-settings.html" class="nav-item">
+                    <i data-lucide="settings"></i>
+                    <span>设置</span>
+                </a>
+            </div>
+        </nav>
+        <div class="sidebar-footer">
+            <div class="user-info">
+                <div class="user-avatar" id="userAvatar">A</div>
+                <div>
+                    <div class="user-name" id="userName">Admin</div>
+                    <div class="user-role">管理员</div>
+                </div>
+            </div>
+            <button class="logout-btn" id="logoutBtn">
+                <i data-lucide="log-out" width="18" height="18"></i>
+                退出登录
+            </button>
+        </div>
+    </aside>
+
+    <main class="main-content">
+        <header class="topbar">
+            <h1 class="topbar-title">设计师简介</h1>
+            <button class="btn btn-primary" id="previewBtn">
+                <i data-lucide="eye" width="18" height="18"></i>
+                预览网站
+            </button>
+        </header>
+
+        <div class="content">
+            <form id="aboutForm">
+                <!-- Basic Info -->
+                <div class="form-card">
+                    <h2 class="form-card-title">基本信息</h2>
+                    
+                    <div class="form-group">
+                        <label class="form-label">头像</label>
+                        <div class="avatar-upload">
+                            <div class="avatar-preview" id="avatarPreview">
+                                <img src="" alt="头像预览" id="avatarImg">
+                            </div>
+                            <div class="avatar-upload-area">
+                                <button type="button" class="avatar-upload-btn" id="uploadAvatarBtn">
+                                    <i data-lucide="upload" width="16" height="16"></i>
+                                    上传头像
+                                </button>
+                                <p class="avatar-upload-hint">建议使用正方形图片，支持 JPG、PNG 格式</p>
+                            </div>
+                        </div>
+                        <input type="file" id="avatarInput" accept="image/*">
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label">姓名 *</label>
+                            <input type="text" class="form-input" id="aboutName" required placeholder="输入设计师姓名">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">头衔 *</label>
+                            <input type="text" class="form-input" id="aboutTitle" required placeholder="如: 品牌设计师 / 创意总监">
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">个人简介 *</label>
+                        <textarea class="form-textarea" id="aboutBio" required placeholder="输入个人简介..."></textarea>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">专业技能</label>
+                        <div class="skills-container" id="skillsContainer"></div>
+                        <button type="button" class="add-skill" id="addSkillBtn">
+                            <i data-lucide="plus" width="14" height="14"></i>
+                            添加技能
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Stats -->
+                <div class="form-card">
+                    <h2 class="form-card-title">数据统计</h2>
+                    <div class="stats-row">
+                        <div class="stat-input-group">
+                            <input type="text" class="stat-input" id="aboutExperience" placeholder="8">
+                            <span class="stat-suffix">年经验</span>
+                        </div>
+                        <div class="stat-input-group">
+                            <input type="text" class="stat-input" id="aboutProjects" placeholder="200">
+                            <span class="stat-suffix">完成项目</span>
+                        </div>
+                        <div class="stat-input-group">
+                            <input type="text" class="stat-input" id="aboutClients" placeholder="50">
+                            <span class="stat-suffix">合作客户</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Contact -->
+                <div class="form-card">
+                    <h2 class="form-card-title">联系方式</h2>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label">邮箱</label>
+                            <input type="email" class="form-input" id="aboutEmail" placeholder="hello@example.com">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">电话</label>
+                            <input type="text" class="form-input" id="aboutPhone" placeholder="138-0000-0000">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">所在地</label>
+                        <input type="text" class="form-input" id="aboutLocation" placeholder="如: 北京 / 上海">
+                    </div>
+                </div>
+
+                <!-- Social -->
+                <div class="form-card">
+                    <h2 class="form-card-title">社交媒体</h2>
+                    <div class="social-grid">
+                        <div class="social-input-group">
+                            <label>微信</label>
+                            <input type="text" class="social-input" id="aboutWechat" placeholder="微信号">
+                        </div>
+                        <div class="social-input-group">
+                            <label>微博</label>
+                            <input type="text" class="social-input" id="aboutWeibo" placeholder="@用户名">
+                        </div>
+                        <div class="social-input-group">
+                            <label>Dribbble</label>
+                            <input type="text" class="social-input" id="aboutDribbble" placeholder="用户名">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-actions">
+                    <button type="button" class="btn btn-outline" id="resetBtn" style="background: none; border: 1px solid var(--muted); color: var(--secondary);">
+                        <i data-lucide="rotate-ccw" width="16" height="16"></i>
+                        重置
+                    </button>
+                    <button type="submit" class="btn btn-primary">
+                        <i data-lucide="save" width="16" height="16"></i>
+                        保存修改
+                    </button>
+                </div>
+            </form>
+        </div>
+    </main>
+
+    <div class="toast" id="toast"></div>
+
+    <script>
+        lucide.createIcons();
+
+        function checkAuth() {
+            const session = JSON.parse(localStorage.getItem('portfolio_session') || sessionStorage.getItem('portfolio_session') || 'null');
+            if (!session || !session.isLoggedIn) window.location.href = 'admin-login.html';
+            return session;
+        }
+
+        const session = checkAuth();
+        if (session) {
+            document.getElementById('userName').textContent = session.username;
+            document.getElementById('userAvatar').textContent = session.username.charAt(0).toUpperCase();
+        }
+
+        document.getElementById('logoutBtn').addEventListener('click', () => {
+            localStorage.removeItem('portfolio_session');
+            sessionStorage.removeItem('portfolio_session');
+            window.location.href = 'admin-login.html';
+        });
+
+        document.getElementById('previewBtn').addEventListener('click', () => {
+            window.open('index.html', '_blank');
+        });
+
+        // Load About Data
+        let aboutData = WorksData.getAbout();
+        let skills = aboutData.skills || [];
+        let avatarData = aboutData.avatar || '';
+
+        function loadAboutData() {
+            document.getElementById('aboutName').value = aboutData.name || '';
+            document.getElementById('aboutTitle').value = aboutData.title || '';
+            document.getElementById('aboutBio').value = aboutData.bio || '';
+            document.getElementById('aboutExperience').value = aboutData.experience?.replace('年', '') || '';
+            document.getElementById('aboutProjects').value = aboutData.projects?.replace('+', '') || '';
+            document.getElementById('aboutClients').value = aboutData.clients?.replace('+', '') || '';
+            document.getElementById('aboutEmail').value = aboutData.email || '';
+            document.getElementById('aboutPhone').value = aboutData.phone || '';
+            document.getElementById('aboutLocation').value = aboutData.location || '';
+            document.getElementById('aboutWechat').value = aboutData.social?.wechat || '';
+            document.getElementById('aboutWeibo').value = aboutData.social?.weibo || '';
+            document.getElementById('aboutDribbble').value = aboutData.social?.dribbble || '';
+
+            avatarData = aboutData.avatar || '';
+            if (avatarData) {
+                document.getElementById('avatarImg').src = avatarData;
+            }
+
+            skills = aboutData.skills || [];
+            renderSkills();
+        }
+
+        function renderSkills() {
+            const container = document.getElementById('skillsContainer');
+            container.innerHTML = skills.map((skill, index) => `
+                <span class="skill-tag">
+                    ${skill}
+                    <button type="button" class="remove" onclick="removeSkill(${index})">
+                        <i data-lucide="x" width="12" height="12"></i>
+                    </button>
+                </span>
+            `).join('');
+            lucide.createIcons();
+        }
+
+        function removeSkill(index) {
+            skills.splice(index, 1);
+            renderSkills();
+        }
+
+        document.getElementById('addSkillBtn').addEventListener('click', () => {
+            const skill = prompt('请输入技能名称:');
+            if (skill && skill.trim()) {
+                skills.push(skill.trim());
+                renderSkills();
+            }
+        });
+
+        // Avatar Upload
+        document.getElementById('uploadAvatarBtn').addEventListener('click', () => {
+            document.getElementById('avatarInput').click();
+        });
+
+        document.getElementById('avatarInput').addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = (event) => {
+                avatarData = event.target.result;
+                document.getElementById('avatarImg').src = avatarData;
+            };
+            reader.readAsDataURL(file);
+        });
+
+        // Form Submit
+        document.getElementById('aboutForm').addEventListener('submit', (e) => {
+            e.preventDefault();
+
+            const newAbout = {
+                name: document.getElementById('aboutName').value.trim(),
+                title: document.getElementById('aboutTitle').value.trim(),
+                bio: document.getElementById('aboutBio').value.trim(),
+                avatar: avatarData,
+                skills: skills,
+                experience: document.getElementById('aboutExperience').value.trim() + '年',
+                projects: document.getElementById('aboutProjects').value.trim() + '+',
+                clients: document.getElementById('aboutClients').value.trim() + '+',
+                email: document.getElementById('aboutEmail').value.trim(),
+                phone: document.getElementById('aboutPhone').value.trim(),
+                location: document.getElementById('aboutLocation').value.trim(),
+                social: {
+                    wechat: document.getElementById('aboutWechat').value.trim(),
+                    weibo: document.getElementById('aboutWeibo').value.trim(),
+                    dribbble: document.getElementById('aboutDribbble').value.trim()
+                }
+            };
+
+            WorksData.saveAbout(newAbout);
+            WorksData.addLog('about_edit', '更新设计师简介');
+            aboutData = newAbout;
+
+            showToast('简介已保存', 'success');
+        });
+
+        // Reset
+        document.getElementById('resetBtn').addEventListener('click', () => {
+            if (confirm('确定要重置为初始数据吗？')) {
+                localStorage.removeItem('portfolio_about');
+                aboutData = WorksData.getAbout();
+                avatarData = aboutData.avatar || '';
+                skills = aboutData.skills || [];
+                loadAboutData();
+                showToast('已重置为初始数据', 'success');
+            }
+        });
+
+        function showToast(message, type = 'info') {
+            const toast = document.getElementById('toast');
+            toast.textContent = message;
+            toast.className = `toast ${type}`;
+            toast.classList.add('show');
+            setTimeout(() => toast.classList.remove('show'), 3000);
+        }
+
+        // ========== 用户访问追踪 ==========
+        (function() {
+            const currentPage = 'admin-about.html';
+            const userId = session?.username || 'admin';
+
+            WorksData.startPageView(currentPage, userId);
+            WorksData.recordVisit(currentPage, userId);
+
+            let maxScroll = 0;
+            window.addEventListener('scroll', function() {
+                const scrollPercent = Math.round((window.scrollY / (document.body.scrollHeight - window.innerHeight)) * 100);
+                if (scrollPercent > maxScroll) {
+                    maxScroll = scrollPercent;
+                    WorksData.updateScrollDepth(maxScroll);
+                }
+            });
+
+            document.addEventListener('click', function() {
+                WorksData.incrementInteractions();
+            });
+
+            window.addEventListener('beforeunload', function() {
+                WorksData.endPageView();
+            });
+
+            document.addEventListener('visibilitychange', function() {
+                if (document.hidden) {
+                    WorksData.endPageView();
+                } else {
+                    WorksData.startPageView(currentPage, userId);
+                }
+            });
+        })();
+
+        loadAboutData();
+    </script>
+</body>
+</html>

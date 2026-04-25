@@ -1,0 +1,7 @@
+{
+  "name": "site-api",
+  "version": "1.0.0",
+  "dependencies": {
+    "tcb-admin-node": "^1.3.5"
+  }
+}

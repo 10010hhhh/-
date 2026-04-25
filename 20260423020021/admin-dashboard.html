@@ -1,0 +1,979 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>管理后台 | 张三设计工作室</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        :root {
+            --primary: #1a1a1a;
+            --secondary: #666666;
+            --accent: #c9a87c;
+            --background: #fafafa;
+            --surface: #ffffff;
+            --muted: #e8e8e8;
+            --error: #dc3545;
+            --success: #28a745;
+            --warning: #ffc107;
+            --font-heading: 'Cormorant Garamond', serif;
+            --font-body: 'Inter', sans-serif;
+            --sidebar-width: 260px;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: var(--font-body);
+            background-color: var(--background);
+            color: var(--primary);
+            min-height: 100vh;
+        }
+
+        /* Sidebar */
+        .sidebar {
+            position: fixed;
+            left: 0;
+            top: 0;
+            width: var(--sidebar-width);
+            height: 100vh;
+            background: var(--surface);
+            border-right: 1px solid var(--muted);
+            display: flex;
+            flex-direction: column;
+            z-index: 100;
+        }
+
+        .sidebar-header {
+            padding: 24px;
+            border-bottom: 1px solid var(--muted);
+        }
+
+        .sidebar-logo {
+            font-family: var(--font-heading);
+            font-size: 24px;
+            font-weight: 600;
+            color: var(--primary);
+            letter-spacing: 2px;
+            text-decoration: none;
+            display: block;
+        }
+
+        .sidebar-subtitle {
+            font-size: 12px;
+            color: var(--secondary);
+            margin-top: 4px;
+        }
+
+        .sidebar-nav {
+            flex: 1;
+            padding: 16px 0;
+            overflow-y: auto;
+        }
+
+        .nav-section {
+            margin-bottom: 24px;
+        }
+
+        .nav-section-title {
+            padding: 8px 24px;
+            font-size: 11px;
+            font-weight: 600;
+            color: var(--secondary);
+            letter-spacing: 1.5px;
+            text-transform: uppercase;
+        }
+
+        .nav-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 24px;
+            font-size: 14px;
+            color: var(--secondary);
+            text-decoration: none;
+            transition: all 0.2s ease;
+            border-left: 3px solid transparent;
+        }
+
+        .nav-item:hover {
+            background: var(--background);
+            color: var(--primary);
+        }
+
+        .nav-item.active {
+            background: rgba(201, 168, 124, 0.1);
+            color: var(--accent);
+            border-left-color: var(--accent);
+        }
+
+        .nav-item i {
+            width: 20px;
+            height: 20px;
+        }
+
+        .nav-badge {
+            margin-left: auto;
+            padding: 2px 8px;
+            font-size: 11px;
+            font-weight: 600;
+            background: var(--error);
+            color: white;
+            border-radius: 10px;
+        }
+
+        .sidebar-footer {
+            padding: 16px 24px;
+            border-top: 1px solid var(--muted);
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 12px;
+        }
+
+        .user-avatar {
+            width: 40px;
+            height: 40px;
+            background: var(--accent);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 600;
+        }
+
+        .user-name {
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        .user-role {
+            font-size: 12px;
+            color: var(--secondary);
+        }
+
+        .logout-btn {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            width: 100%;
+            padding: 10px 16px;
+            font-family: var(--font-body);
+            font-size: 14px;
+            background: none;
+            border: 1px solid var(--muted);
+            border-radius: 4px;
+            color: var(--secondary);
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .logout-btn:hover {
+            background: var(--error);
+            border-color: var(--error);
+            color: white;
+        }
+
+        /* Main Content */
+        .main-content {
+            margin-left: var(--sidebar-width);
+            min-height: 100vh;
+        }
+
+        .topbar {
+            position: sticky;
+            top: 0;
+            background: var(--surface);
+            border-bottom: 1px solid var(--muted);
+            padding: 16px 32px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            z-index: 50;
+        }
+
+        .topbar-title {
+            font-size: 20px;
+            font-weight: 600;
+        }
+
+        .topbar-actions {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .topbar-link {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 14px;
+            color: var(--secondary);
+            text-decoration: none;
+            transition: color 0.2s ease;
+        }
+
+        .topbar-link:hover {
+            color: var(--accent);
+        }
+
+        .content {
+            padding: 32px;
+        }
+
+        /* Stats Cards */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 24px;
+            margin-bottom: 32px;
+        }
+
+        .stat-card {
+            background: var(--surface);
+            padding: 24px;
+            border-radius: 8px;
+            border: 1px solid var(--muted);
+        }
+
+        .stat-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 16px;
+        }
+
+        .stat-icon {
+            width: 48px;
+            height: 48px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 8px;
+            color: white;
+        }
+
+        .stat-icon.works { background: linear-gradient(135deg, #667eea, #764ba2); }
+        .stat-icon.contacts { background: linear-gradient(135deg, #f093fb, #f5576c); }
+        .stat-icon.views { background: linear-gradient(135deg, #4facfe, #00f2fe); }
+        .stat-icon.logs { background: linear-gradient(135deg, #43e97b, #38f9d7); }
+
+        .stat-trend {
+            font-size: 12px;
+            font-weight: 500;
+            padding: 4px 8px;
+            border-radius: 12px;
+        }
+
+        .stat-trend.up {
+            background: rgba(40, 167, 69, 0.1);
+            color: var(--success);
+        }
+
+        .stat-trend.down {
+            background: rgba(220, 53, 69, 0.1);
+            color: var(--error);
+        }
+
+        .stat-value {
+            font-family: var(--font-heading);
+            font-size: 36px;
+            font-weight: 600;
+            color: var(--primary);
+            line-height: 1;
+            margin-bottom: 4px;
+        }
+
+        .stat-label {
+            font-size: 14px;
+            color: var(--secondary);
+        }
+
+        /* Recent Activity */
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 24px;
+        }
+
+        .card {
+            background: var(--surface);
+            border-radius: 8px;
+            border: 1px solid var(--muted);
+            overflow: hidden;
+        }
+
+        .card-header {
+            padding: 20px 24px;
+            border-bottom: 1px solid var(--muted);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .card-title {
+            font-size: 16px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .card-body {
+            padding: 24px;
+        }
+
+        /* Activity List */
+        .activity-list {
+            list-style: none;
+        }
+
+        .activity-item {
+            display: flex;
+            gap: 16px;
+            padding: 16px 0;
+            border-bottom: 1px solid var(--muted);
+        }
+
+        .activity-item:last-child {
+            border-bottom: none;
+        }
+
+        .activity-icon {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+
+        .activity-icon.login { background: rgba(40, 167, 69, 0.1); color: var(--success); }
+        .activity-icon.work { background: rgba(102, 126, 234, 0.1); color: #667eea; }
+        .activity-icon.contact { background: rgba(245, 87, 108, 0.1); color: #f5576c; }
+        .activity-icon.settings { background: rgba(201, 168, 124, 0.1); color: var(--accent); }
+
+        .activity-content {
+            flex: 1;
+        }
+
+        .activity-text {
+            font-size: 14px;
+            margin-bottom: 4px;
+        }
+
+        .activity-time {
+            font-size: 12px;
+            color: var(--secondary);
+        }
+
+        /* Quick Actions */
+        .quick-actions {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .quick-action-btn {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 16px;
+            background: var(--background);
+            border: 1px solid var(--muted);
+            border-radius: 8px;
+            font-family: var(--font-body);
+            font-size: 14px;
+            color: var(--primary);
+            text-decoration: none;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .quick-action-btn:hover {
+            background: var(--accent);
+            border-color: var(--accent);
+            color: white;
+        }
+
+        .quick-action-btn i {
+            width: 20px;
+            height: 20px;
+        }
+
+        /* Recent Works */
+        .works-list {
+            list-style: none;
+        }
+
+        .work-item {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            padding: 12px 0;
+            border-bottom: 1px solid var(--muted);
+        }
+
+        .work-item:last-child {
+            border-bottom: none;
+        }
+
+        .work-thumb {
+            width: 60px;
+            height: 60px;
+            border-radius: 4px;
+            object-fit: cover;
+        }
+
+        .work-info {
+            flex: 1;
+        }
+
+        .work-name {
+            font-size: 14px;
+            font-weight: 500;
+            margin-bottom: 2px;
+        }
+
+        .work-category {
+            font-size: 12px;
+            color: var(--secondary);
+        }
+
+        .work-status {
+            padding: 4px 12px;
+            font-size: 11px;
+            font-weight: 500;
+            border-radius: 12px;
+            background: rgba(40, 167, 69, 0.1);
+            color: var(--success);
+        }
+
+        /* Responsive */
+        @media (max-width: 1200px) {
+            .stats-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .dashboard-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .sidebar {
+                transform: translateX(-100%);
+                transition: transform 0.3s ease;
+            }
+
+            .sidebar.open {
+                transform: translateX(0);
+            }
+
+            .main-content {
+                margin-left: 0;
+            }
+
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .content {
+                padding: 16px;
+            }
+        }
+
+        /* Notification Toast */
+        .toast {
+            position: fixed;
+            bottom: 24px;
+            right: 24px;
+            padding: 16px 24px;
+            background: var(--primary);
+            color: white;
+            border-radius: 8px;
+            font-size: 14px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+            transform: translateY(100px);
+            opacity: 0;
+            transition: all 0.3s ease;
+            z-index: 1000;
+        }
+
+        .toast.show {
+            transform: translateY(0);
+            opacity: 1;
+        }
+
+        .toast.success { background: var(--success); }
+        .toast.error { background: var(--error); }
+    </style>
+</head>
+<body>
+    <!-- Sidebar -->
+    <aside class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <a href="index.html" class="sidebar-logo">张三</a>
+            <p class="sidebar-subtitle">设计工作室管理后台</p>
+        </div>
+
+        <nav class="sidebar-nav">
+            <div class="nav-section">
+                <div class="nav-section-title">概览</div>
+                <a href="admin-dashboard.html" class="nav-item">
+                    <i data-lucide="layout-dashboard"></i>
+                    <span>仪表盘</span>
+                </a>
+                <a href="admin-analytics.html" class="nav-item">
+                    <i data-lucide="bar-chart-2"></i>
+                    <span>访问分析</span>
+                </a>
+            </div>
+
+            <div class="nav-section">
+                <div class="nav-section-title">内容管理</div>
+                <a href="admin-banner.html" class="nav-item">
+                    <i data-lucide="layout-template"></i>
+                    <span>Banner管理</span>
+                </a>
+                <a href="admin-works.html" class="nav-item">
+                    <i data-lucide="image"></i>
+                    <span>作品管理</span>
+                    <span class="nav-badge" id="worksBadge">0</span>
+                </a>
+                <a href="admin-about.html" class="nav-item">
+                    <i data-lucide="user"></i>
+                    <span>设计师简介</span>
+                </a>
+                <a href="admin-resume.html" class="nav-item">
+                    <i data-lucide="file-text"></i>
+                    <span>个人简历</span>
+                    <span class="nav-badge" id="resumeAuditBadge">0</span>
+                </a>
+                <a href="admin-contacts.html" class="nav-item">
+                    <i data-lucide="mail"></i>
+                    <span>联系数据</span>
+                    <span class="nav-badge" id="contactsBadge">0</span>
+                </a>
+            </div>
+
+            <div class="nav-section">
+                <div class="nav-section-title">系统</div>
+                <a href="admin-settings.html" class="nav-item">
+                    <i data-lucide="settings"></i>
+                    <span>设置</span>
+                </a>
+            </div>
+        </nav>
+
+        <div class="sidebar-footer">
+            <div class="user-info">
+                <div class="user-avatar" id="userAvatar">A</div>
+                <div>
+                    <div class="user-name" id="userName">Admin</div>
+                    <div class="user-role">管理员</div>
+                </div>
+            </div>
+            <button class="logout-btn" id="logoutBtn">
+                <i data-lucide="log-out" width="18" height="18"></i>
+                退出登录
+            </button>
+        </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <header class="topbar">
+            <h1 class="topbar-title">仪表盘</h1>
+            <div class="topbar-actions">
+                <a href="index.html" class="topbar-link" target="_blank">
+                    <i data-lucide="external-link" width="18" height="18"></i>
+                    查看网站
+                </a>
+            </div>
+        </header>
+
+        <div class="content">
+            <!-- Stats -->
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-header">
+                        <div class="stat-icon works">
+                            <i data-lucide="image"></i>
+                        </div>
+                        <span class="stat-trend up">+2</span>
+                    </div>
+                    <div class="stat-value" id="statWorks">6</div>
+                    <div class="stat-label">作品数量</div>
+                </div>
+
+                <div class="stat-card">
+                    <div class="stat-header">
+                        <div class="stat-icon contacts">
+                            <i data-lucide="mail"></i>
+                        </div>
+                        <span class="stat-trend up" id="newContacts">+0</span>
+                    </div>
+                    <div class="stat-value" id="statContacts">0</div>
+                    <div class="stat-label">联系表单</div>
+                </div>
+
+                <div class="stat-card">
+                    <div class="stat-header">
+                        <div class="stat-icon views">
+                            <i data-lucide="eye"></i>
+                        </div>
+                        <span class="stat-trend up">+15%</span>
+                    </div>
+                    <div class="stat-value" id="statViews">1,234</div>
+                    <div class="stat-label">总浏览量</div>
+                </div>
+
+                <div class="stat-card">
+                    <div class="stat-header">
+                        <div class="stat-icon logs">
+                            <i data-lucide="activity"></i>
+                        </div>
+                    </div>
+                    <div class="stat-value" id="statLogs">0</div>
+                    <div class="stat-label">操作日志</div>
+                </div>
+            </div>
+
+            <!-- Dashboard Grid -->
+            <div class="dashboard-grid">
+                <div class="card">
+                    <div class="card-header">
+                        <h2 class="card-title">
+                            <i data-lucide="activity"></i>
+                            最近活动
+                        </h2>
+                    </div>
+                    <div class="card-body">
+                        <ul class="activity-list" id="activityList">
+                            <li class="activity-item">
+                                <div class="activity-icon login">
+                                    <i data-lucide="log-in" width="18"></i>
+                                </div>
+                                <div class="activity-content">
+                                    <p class="activity-text">管理员登录系统</p>
+                                    <span class="activity-time">刚刚</span>
+                                </div>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div>
+                    <div class="card" style="margin-bottom: 24px;">
+                        <div class="card-header">
+                            <h2 class="card-title">
+                                <i data-lucide="zap"></i>
+                                快捷操作
+                            </h2>
+                        </div>
+                        <div class="card-body">
+                            <div class="quick-actions">
+                                <a href="admin-works.html" class="quick-action-btn">
+                                    <i data-lucide="plus-circle"></i>
+                                    添加新作品
+                                </a>
+                                <a href="admin-settings.html" class="quick-action-btn">
+                                    <i data-lucide="user"></i>
+                                    修改个人信息
+                                </a>
+                                <a href="admin-contacts.html" class="quick-action-btn">
+                                    <i data-lucide="download"></i>
+                                    导出联系数据
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <div class="card-header">
+                            <h2 class="card-title">
+                                <i data-lucide="image"></i>
+                                最新作品
+                            </h2>
+                            <a href="admin-works.html" class="topbar-link">查看全部</a>
+                        </div>
+                        <div class="card-body">
+                            <ul class="works-list" id="recentWorks">
+                                <!-- 动态填充 -->
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Toast -->
+    <div class="toast" id="toast"></div>
+
+    <script>
+        lucide.createIcons();
+
+        // 检查登录状态
+        function checkAuth() {
+            const session = JSON.parse(localStorage.getItem('portfolio_session') || sessionStorage.getItem('portfolio_session') || 'null');
+            if (!session || !session.isLoggedIn) {
+                window.location.href = 'admin-login.html';
+            }
+            return session;
+        }
+
+        const session = checkAuth();
+        if (session) {
+            document.getElementById('userName').textContent = session.username;
+            document.getElementById('userAvatar').textContent = session.username.charAt(0).toUpperCase();
+        }
+
+        // 退出登录
+        document.getElementById('logoutBtn').addEventListener('click', () => {
+            localStorage.removeItem('portfolio_session');
+            sessionStorage.removeItem('portfolio_session');
+            
+            // 记录登出日志
+            const logs = JSON.parse(localStorage.getItem('portfolio_logs') || '[]');
+            logs.unshift({
+                type: 'logout',
+                username: session.username,
+                time: new Date().toISOString(),
+                ip: '127.0.0.1'
+            });
+            localStorage.setItem('portfolio_logs', JSON.stringify(logs.slice(0, 100)));
+
+            window.location.href = 'admin-login.html';
+        });
+
+        // 加载统计数据
+        function loadStats() {
+            const works = JSON.parse(localStorage.getItem('portfolio_works') || '[]');
+            const contacts = JSON.parse(localStorage.getItem('portfolio_contacts') || '[]');
+            const logs = JSON.parse(localStorage.getItem('portfolio_logs') || '[]');
+
+            // 如果没有数据，使用默认作品数据
+            let worksData = works;
+            if (worksData.length === 0) {
+                worksData = [
+                    { id: 1, title: '晨曦咖啡', category: '品牌设计', mainImage: 'https://images.unsplash.com/photo-1634942537034-2531766767d1?w=200&h=150&fit=crop' },
+                    { id: 2, title: '云境酒店', category: '品牌设计', mainImage: 'https://images.unsplash.com/photo-1561070791-2526d30994b5?w=200&h=150&fit=crop' },
+                    { id: 3, title: '竹语', category: '包装设计', mainImage: 'https://images.unsplash.com/photo-1558591710-4b4a1ae0f04d?w=200&h=150&fit=crop' },
+                    { id: 4, title: '城市音符', category: '活动视觉', mainImage: 'https://images.unsplash.com/photo-1559028012-481c04fa702d?w=200&h=150&fit=crop' },
+                    { id: 5, title: '留白', category: '品牌设计', mainImage: 'https://images.unsplash.com/photo-1586717791821-3f44a563fa4c?w=200&h=150&fit=crop' },
+                    { id: 6, title: '流动', category: '插画创作', mainImage: 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=200&h=150&fit=crop' }
+                ];
+            }
+
+            document.getElementById('statWorks').textContent = worksData.length;
+            document.getElementById('worksBadge').textContent = worksData.length;
+            document.getElementById('statContacts').textContent = contacts.length;
+            document.getElementById('contactsBadge').textContent = contacts.length;
+            
+            // 更新待审核简历数量
+            const pendingResumeChanges = WorksData.getPendingResumeChanges ? WorksData.getPendingResumeChanges() : [];
+            const resumeBadge = document.getElementById('resumeAuditBadge');
+            if (resumeBadge) {
+                resumeBadge.textContent = pendingResumeChanges.length;
+                resumeBadge.style.display = pendingResumeChanges.length > 0 ? 'inline-block' : 'none';
+            }
+            document.getElementById('statLogs').textContent = logs.length;
+
+            // 显示新联系数量
+            const newContactsCount = contacts.filter(c => {
+                const created = new Date(c.createdAt);
+                const today = new Date();
+                return created.toDateString() === today.toDateString();
+            }).length;
+            if (newContactsCount > 0) {
+                document.getElementById('newContacts').textContent = `+${newContactsCount}`;
+            }
+
+            return { works: worksData, contacts, logs };
+        }
+
+        // 加载最近活动
+        function loadRecentActivity(logs) {
+            const activityList = document.getElementById('activityList');
+            
+            if (logs.length === 0) {
+                activityList.innerHTML = `
+                    <li class="activity-item">
+                        <div class="activity-icon login">
+                            <i data-lucide="info" width="18"></i>
+                        </div>
+                        <div class="activity-content">
+                            <p class="activity-text">暂无活动记录</p>
+                            <span class="activity-time">-</span>
+                        </div>
+                    </li>
+                `;
+            } else {
+                const recentLogs = logs.slice(0, 5);
+                activityList.innerHTML = recentLogs.map(log => {
+                    let iconClass = 'login';
+                    let icon = 'log-in';
+                    let text = '';
+
+                    switch (log.type) {
+                        case 'login':
+                            iconClass = 'login';
+                            icon = 'log-in';
+                            text = `管理员 ${log.username} 登录系统`;
+                            break;
+                        case 'logout':
+                            iconClass = 'login';
+                            icon = 'log-out';
+                            text = `管理员 ${log.username} 退出系统`;
+                            break;
+                        case 'work_add':
+                            iconClass = 'work';
+                            icon = 'plus-circle';
+                            text = `新增作品: ${log.workTitle}`;
+                            break;
+                        case 'work_edit':
+                            iconClass = 'work';
+                            icon = 'edit';
+                            text = `编辑作品: ${log.workTitle}`;
+                            break;
+                        case 'work_delete':
+                            iconClass = 'work';
+                            icon = 'trash-2';
+                            text = `删除作品: ${log.workTitle}`;
+                            break;
+                        case 'contact':
+                            iconClass = 'contact';
+                            icon = 'mail';
+                            text = `收到新联系表单: ${log.name}`;
+                            break;
+                        case 'settings':
+                            iconClass = 'settings';
+                            icon = 'settings';
+                            text = log.message || '更新系统设置';
+                            break;
+                        default:
+                            text = log.message || '未知操作';
+                    }
+
+                    return `
+                        <li class="activity-item">
+                            <div class="activity-icon ${iconClass}">
+                                <i data-lucide="${icon}" width="18"></i>
+                            </div>
+                            <div class="activity-content">
+                                <p class="activity-text">${text}</p>
+                                <span class="activity-time">${formatTime(log.time)}</span>
+                            </div>
+                        </li>
+                    `;
+                }).join('');
+            }
+
+            lucide.createIcons();
+        }
+
+        // 加载最新作品
+        function loadRecentWorks(works) {
+            const recentWorks = document.getElementById('recentWorks');
+            const recent = works.slice(0, 4);
+
+            recentWorks.innerHTML = recent.map(work => `
+                <li class="work-item">
+                    <img src="${work.mainImage}" alt="${work.title}" class="work-thumb">
+                    <div class="work-info">
+                        <div class="work-name">${work.title}</div>
+                        <div class="work-category">${work.category}</div>
+                    </div>
+                    <span class="work-status">已发布</span>
+                </li>
+            `).join('');
+        }
+
+        // 格式化时间
+        function formatTime(isoString) {
+            const date = new Date(isoString);
+            const now = new Date();
+            const diff = now - date;
+
+            if (diff < 60000) return '刚刚';
+            if (diff < 3600000) return `${Math.floor(diff / 60000)}分钟前`;
+            if (diff < 86400000) return `${Math.floor(diff / 3600000)}小时前`;
+            if (diff < 604800000) return `${Math.floor(diff / 86400000)}天前`;
+            
+            return date.toLocaleDateString('zh-CN', { month: 'short', day: 'numeric' });
+        }
+
+        // Toast 提示
+        function showToast(message, type = 'info') {
+            const toast = document.getElementById('toast');
+            toast.textContent = message;
+            toast.className = `toast ${type}`;
+            toast.classList.add('show');
+
+            setTimeout(() => {
+                toast.classList.remove('show');
+            }, 3000);
+        }
+
+        // ========== 用户访问追踪 ==========
+        (function() {
+            const currentPage = 'admin-dashboard.html';
+            const userId = session?.username || 'admin';
+
+            // 开始页面追踪
+            WorksData.startPageView(currentPage, userId);
+            WorksData.recordVisit(currentPage, userId);
+
+            // 追踪滚动深度
+            let maxScroll = 0;
+            window.addEventListener('scroll', function() {
+                const scrollPercent = Math.round((window.scrollY / (document.body.scrollHeight - window.innerHeight)) * 100);
+                if (scrollPercent > maxScroll) {
+                    maxScroll = scrollPercent;
+                    WorksData.updateScrollDepth(maxScroll);
+                }
+            });
+
+            // 追踪用户交互
+            document.addEventListener('click', function() {
+                WorksData.incrementInteractions();
+            });
+
+            // 页面离开时结束追踪
+            window.addEventListener('beforeunload', function() {
+                WorksData.endPageView();
+            });
+
+            // 页面隐藏时也结束追踪
+            document.addEventListener('visibilitychange', function() {
+                if (document.hidden) {
+                    WorksData.endPageView();
+                } else {
+                    WorksData.startPageView(currentPage, userId);
+                }
+            });
+
+            console.log('[Tracking] Started for:', currentPage);
+        })();
+
+        // 初始化
+        const { works, contacts, logs } = loadStats();
+        loadRecentActivity(logs);
+        loadRecentWorks(works);
+    </script>
+</body>
+</html>
