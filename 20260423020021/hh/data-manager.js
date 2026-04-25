@@ -1,7 +1,7 @@
 /**
  * 作品集数据管理器 - 统一管理所有数据
  */
-(function() {
+window.WorksData = (function() {
     'use strict';
 
     // Vercel 部署时定义空的 API URL（避免报错）
@@ -1163,7 +1163,7 @@
     }
     
     // 公开API
-    window.WorksData = {
+    return {
         // 初始化
         init: initCloudSync,
         
@@ -1372,7 +1372,8 @@
         exportVisitReport
     };
 
-    // 注意：移除跨标签页监听器避免循环刷新
+    console.log('[WorksData] Initialized, version:', getCacheVersion());
+})();
     // 如需跨标签页同步，请在外部页面使用 localStorage.setItem 手动触发
 
     console.log('[WorksData] Initialized, version:', getCacheVersion());
