@@ -4,6 +4,11 @@
 (function() {
     'use strict';
 
+    // Vercel 部署时定义空的 API URL（避免报错）
+    if (typeof CLOUD_API_URL === 'undefined') {
+        window.CLOUD_API_URL = null;
+    }
+
     // 存储键名
     const STORAGE_KEY = 'portfolio_works';
     const CONTACTS_KEY = 'portfolio_contacts';
@@ -1193,48 +1198,41 @@
         
         // 直接测试云端连接和写入
         async testCloudWrite(testData = { test: true, time: Date.now() }) {
-            // 确保获取正确的 API URL
-            const apiUrl = typeof CLOUD_API_URL !== 'undefined' 
-                ? CLOUD_API_URL 
-                : 'https://ai-native-d0gc0n8ngab6ad9a9-1424489190.ap-shanghai.app.tcloudbase.com/site-api';
+            // Vercel 部署时跳过云端测试（使用 localStorage）
+            if (!CLOUD_API_URL) {
+                console.log('[WorksData] Vercel mode: using localStorage');
+                try {
+                    localStorage.setItem('_test_connection', JSON.stringify(testData));
+                    const read = localStorage.getItem('_test_connection');
+                    const verified = !!read;
+                    localStorage.removeItem('_test_connection');
+                    return { success: true, verified, mode: 'localStorage' };
+                } catch (e) {
+                    return { success: false, error: e.message };
+                }
+            }
             
             console.log('[WorksData] Testing cloud write...');
-            console.log('[WorksData] API URL:', apiUrl);
-            console.log('[WorksData] CLOUD_API_URL defined:', typeof CLOUD_API_URL !== 'undefined');
             try {
-                const response = await fetch(apiUrl, {
+                const response = await fetch(CLOUD_API_URL, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ action: 'set', key: '_test_connection', value: testData })
                 });
                 
                 const result = await response.json();
-                console.log('[WorksData] Write response status:', response.status);
-                console.log('[WorksData] Write response:', JSON.stringify(result));
+                console.log('[WorksData] Test write result:', result);
                 
-                if (!result.success) {
-                    return { success: false, error: result.error || '写入失败' };
-                }
-                
-                // 等待云端写入完成（CloudBase 可能需要一点时间）
-                await new Promise(resolve => setTimeout(resolve, 500));
-                
-                // 读取验证
-                const readResponse = await fetch(apiUrl, {
+                // 立即读取验证
+                const readResponse = await fetch(CLOUD_API_URL, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ action: 'get' })
                 });
                 const readResult = await readResponse.json();
-                console.log('[WorksData] Read response status:', readResponse.status);
-                console.log('[WorksData] Read response:', JSON.stringify(readResult));
                 console.log('[WorksData] Verification - test key exists:', readResult.data?._test_connection);
-                console.log('[WorksData] All cloud keys:', Object.keys(readResult.data || {}));
                 
-                // 验证测试键存在即可
-                const verified = !!readResult.data?._test_connection;
-                console.log('[WorksData] Verification result:', verified);
-                return { success: true, verified };
+                return { success: result.success, verified: !!readResult.data?._test_connection };
             } catch (e) {
                 console.error('[WorksData] Test write failed:', e);
                 return { success: false, error: e.message };
@@ -1255,8 +1253,8 @@
                 cloudEndpoint: CLOUD_API_URL
             };
             
-            // 实时查询云端数据（不依赖缓存）
-            if (report.cloudAvailable) {
+            // 实时查询云端数据（不依赖缓存）- 仅在有云端API时
+            if (report.cloudAvailable && CLOUD_API_URL) {
                 try {
                     // 强制刷新，从云端实时获取
                     console.log('[WorksData] Querying cloud directly...');
